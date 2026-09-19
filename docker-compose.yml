@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: launchpads
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      retries: 15
+
+  launchpad-factory-app:
+    image: node:24
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile --store-dir /pnpm-store && pnpm dev"
+    env_file:
+      - path: launchpad-factory-app/.env.local
+        required: false
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/launchpads
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./launchpad-factory-app:/app
+      - launchpad-factory-app-node-modules:/app/node_modules
+      - launchpad-factory-app-next:/app/.next
+      - pnpm-store:/pnpm-store
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  pnpm-store:
+  launchpad-factory-app-node-modules:
+  launchpad-factory-app-next:
