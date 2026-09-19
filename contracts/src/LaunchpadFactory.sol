@@ -12,14 +12,17 @@ import {IOwnable} from "./interfaces/IOwnable.sol";
 contract LaunchpadFactory is ILaunchpadFactory, Ownable {
     address public launchpadImplementation;
     mapping(IHooks => bool) public isHookAllowed;
+    mapping(address => bool) public isPriceUpdater;
     mapping(Currency => uint256) internal usdPricePerWad;
 
     event LaunchpadCreated(address indexed launchpad, address indexed creator);
     event LaunchpadImplementationSet(address indexed launchpadImplementation);
     event HookAllowedSet(IHooks indexed hooks, bool allowed);
+    event PriceUpdaterSet(address indexed priceUpdater, bool allowed);
     event QuotePriceSet(Currency indexed quoteToken, uint256 usdPricePerWad);
 
     error QuotePriceNotSet();
+    error NotPriceUpdater();
 
     constructor(address owner_, address launchpadImplementation_) Ownable(owner_) {
         _setLaunchpadImplementation(launchpadImplementation_);
@@ -34,7 +37,13 @@ contract LaunchpadFactory is ILaunchpadFactory, Ownable {
         emit HookAllowedSet(hooks, allowed);
     }
 
-    function setQuotePrice(Currency quoteToken, uint256 usdPricePerWad_) external onlyOwner {
+    function setPriceUpdater(address priceUpdater, bool allowed) external onlyOwner {
+        isPriceUpdater[priceUpdater] = allowed;
+        emit PriceUpdaterSet(priceUpdater, allowed);
+    }
+
+    function setQuotePrice(Currency quoteToken, uint256 usdPricePerWad_) external {
+        if (!isPriceUpdater[msg.sender] && msg.sender != owner()) revert NotPriceUpdater();
         usdPricePerWad[quoteToken] = usdPricePerWad_;
         emit QuotePriceSet(quoteToken, usdPricePerWad_);
     }
