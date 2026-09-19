@@ -1,0 +1,9 @@
+{
+  "name": "railway-config",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "railway": "3.11.0",
+    "typescript": "5.9.3"
+  }
+}
