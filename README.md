@@ -27,3 +27,10 @@ Components:
 - **Factory with a contract per launchpad.** A factory deploys a separate smart contract for each launchpad. This encapsulates the logic of each launchpad and makes it possible to upgrade features for each launchpad independently.
 - **Token launch via one-sided liquidity, without an explicit migration.** If needed, a migration can be simulated on the frontend. Without a migration, tokens are immediately visible in all bots and trading apps, because they go straight into Uniswap — unlike the bonding curve approach.
 - **A launchpad is a proxy.** Each launchpad is deployed as an upgradeable proxy, so that big launchpads can ship their own upgrades in the future. It costs us nothing, but adds flexibility.
+
+1. There is a launchpad factory. The factory itself is not upgradeable (not a proxy); its owner manages the launchpad implementation, the hook whitelist and quote prices.
+2. Anyone can launch a launchpad. A launchpad is created as a proxy, and its implementation is controlled by the factory owner.
+3. Only the factory owner can change the implementation of a launchpad.
+4. A launchpad allows launching a token against a whitelisted quote token and with a whitelisted hook.
+5. The launch parameters (total supply, initial market cap in USD, pool fee, tick spacing, enabled quote tokens) are chosen by the launchpad owner; the starting price is derived from the market cap using the factory's quote price.
+6. Hooks are whitelisted at the factory level: because of possible hook scams, users must not be able to write their own hooks without approval.

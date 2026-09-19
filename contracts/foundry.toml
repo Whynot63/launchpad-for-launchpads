@@ -14,6 +14,7 @@ remappings = [
     "base-std/=lib/base-std/src/",
     "@uniswap/v4-core/=lib/v4-periphery/lib/v4-core/",
     "@uniswap/v4-periphery/=lib/v4-periphery/",
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
     "@openzeppelin/contracts/=lib/v4-periphery/lib/v4-core/lib/openzeppelin-contracts/contracts/",
     "solmate/=lib/v4-periphery/lib/v4-core/lib/solmate/",
 ]

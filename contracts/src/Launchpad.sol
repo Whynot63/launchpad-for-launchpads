@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {SafeCallback} from "@uniswap/v4-periphery/src/base/SafeCallback.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
@@ -11,87 +13,62 @@ import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
 import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
+import {FullMath} from "@uniswap/v4-core/src/libraries/FullMath.sol";
+import {SafeCast} from "@uniswap/v4-core/src/libraries/SafeCast.sol";
 import {LiquidityAmounts} from "@uniswap/v4-periphery/src/libraries/LiquidityAmounts.sol";
 import {StdPrecompiles} from "base-std/StdPrecompiles.sol";
 import {IB20} from "base-std/interfaces/IB20.sol";
 import {IB20Factory} from "base-std/interfaces/IB20Factory.sol";
 import {B20FactoryLib} from "base-std/lib/B20FactoryLib.sol";
+import {ILaunchpad} from "./interfaces/ILaunchpad.sol";
+import {ILaunchpadFactory} from "./interfaces/ILaunchpadFactory.sol";
 
-contract Launchpad is SafeCallback, Initializable, UUPSUpgradeable {
-    struct Config {
-        uint256 totalSupply;
-        uint24 poolFee;
-        int24 tickSpacing;
-    }
-
-    struct QuoteToken {
-        bool allowed;
-        int24 startingTick;
-    }
-
+contract Launchpad is ILaunchpad, SafeCallback, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint8 public constant TOKEN_DECIMALS = 18;
 
-    address public owner;
+    ILaunchpadFactory public factory;
     Config public config;
     uint256 public launchCount;
-    mapping(IHooks => bool) internal allowedHooks;
-    mapping(Currency => QuoteToken) public quoteTokens;
-
-    event TokenLaunched(
-        address indexed token, address indexed creator, Currency quoteToken, IHooks hooks, string name, string symbol
-    );
-    event HookAllowedSet(IHooks indexed hooks, bool allowed);
-    event QuoteTokenSet(Currency indexed quoteToken, bool allowed, int24 startingTick);
-
-    error NotOwner();
-    error HookNotAllowed();
-    error QuoteTokenNotAllowed();
-    error StartingTickNotAlignedToTickSpacing();
-
-    modifier onlyOwner() {
-        if (msg.sender != owner) revert NotOwner();
-        _;
-    }
+    mapping(Currency => bool) public isQuoteEnabled;
 
     constructor(IPoolManager poolManager_) SafeCallback(poolManager_) {
         _disableInitializers();
     }
 
-    function initialize(address owner_, Config calldata config_, Currency quoteToken, int24 startingTick)
-        external
-        initializer
-    {
-        owner = owner_;
-        config = config_;
-        _setQuoteToken(quoteToken, true, startingTick);
+    function initialize(address owner_, Config calldata config_, Currency[] calldata quoteTokens) external initializer {
+        __Ownable_init(owner_);
+        factory = ILaunchpadFactory(msg.sender);
+        _setConfig(config_);
+        for (uint256 i = 0; i < quoteTokens.length; i++) {
+            _setQuoteEnabled(quoteTokens[i], true);
+        }
     }
 
-    function setHookAllowed(IHooks hooks, bool allowed) external onlyOwner {
-        allowedHooks[hooks] = allowed;
-        emit HookAllowedSet(hooks, allowed);
+    function setConfig(Config calldata config_) external onlyOwner {
+        _setConfig(config_);
     }
 
-    function setQuoteToken(Currency quoteToken, bool allowed, int24 startingTick) external onlyOwner {
-        _setQuoteToken(quoteToken, allowed, startingTick);
+    function setQuoteEnabled(Currency quoteToken, bool enabled) external onlyOwner {
+        _setQuoteEnabled(quoteToken, enabled);
     }
 
     function launchToken(string calldata name, string calldata symbol, Currency quoteToken, IHooks hooks)
         external
         returns (address token)
     {
-        if (!isHookAllowed(hooks)) revert HookNotAllowed();
-        QuoteToken memory quote = quoteTokens[quoteToken];
-        if (!quote.allowed) revert QuoteTokenNotAllowed();
+        if (!factory.isHookAllowed(hooks)) revert HookNotAllowed();
+        if (!isQuoteEnabled[quoteToken]) revert QuoteNotEnabled();
 
         bytes[] memory mintSupplyToLaunchpad = new bytes[](1);
         mintSupplyToLaunchpad[0] = abi.encodeCall(IB20.mint, (address(this), config.totalSupply));
 
-        token = StdPrecompiles.B20_FACTORY.createB20(
-            IB20Factory.B20Variant.ASSET,
-            bytes32(launchCount++),
-            B20FactoryLib.encodeAssetCreateParams(name, symbol, address(0), TOKEN_DECIMALS),
-            mintSupplyToLaunchpad
-        );
+        token = StdPrecompiles.B20_FACTORY
+            .createB20(
+                IB20Factory.B20Variant.ASSET,
+                bytes32(launchCount++),
+                B20FactoryLib.encodeAssetCreateParams(name, symbol, address(0), TOKEN_DECIMALS),
+                mintSupplyToLaunchpad
+            );
 
         bool tokenIsCurrency1 = Currency.unwrap(quoteToken) < token;
         PoolKey memory poolKey = PoolKey({
@@ -101,7 +78,7 @@ contract Launchpad is SafeCallback, Initializable, UUPSUpgradeable {
             tickSpacing: config.tickSpacing,
             hooks: hooks
         });
-        int24 poolStartingTick = tokenIsCurrency1 ? quote.startingTick : -quote.startingTick;
+        int24 poolStartingTick = tokenIsCurrency1 ? _startingTick(quoteToken) : -_startingTick(quoteToken);
 
         poolManager.initialize(poolKey, TickMath.getSqrtPriceAtTick(poolStartingTick));
         poolManager.unlock(abi.encode(poolKey, tokenIsCurrency1, poolStartingTick));
@@ -109,16 +86,27 @@ contract Launchpad is SafeCallback, Initializable, UUPSUpgradeable {
         emit TokenLaunched(token, msg.sender, quoteToken, hooks, name, symbol);
     }
 
-    function isHookAllowed(IHooks hooks) public view returns (bool) {
-        return address(hooks) == address(0) || allowedHooks[hooks];
+    function _authorizeUpgrade(address) internal view override {
+        if (msg.sender != factory.owner()) revert NotFactoryOwner();
     }
 
-    function _authorizeUpgrade(address) internal override onlyOwner {}
+    function _setConfig(Config calldata config_) internal {
+        config = config_;
+        emit ConfigSet(config_);
+    }
 
-    function _setQuoteToken(Currency quoteToken, bool allowed, int24 startingTick) internal {
-        if (startingTick % config.tickSpacing != 0) revert StartingTickNotAlignedToTickSpacing();
-        quoteTokens[quoteToken] = QuoteToken(allowed, startingTick);
-        emit QuoteTokenSet(quoteToken, allowed, startingTick);
+    function _setQuoteEnabled(Currency quoteToken, bool enabled) internal {
+        if (enabled) factory.quotePrice(quoteToken, 1e18);
+        isQuoteEnabled[quoteToken] = enabled;
+        emit QuoteEnabledSet(quoteToken, enabled);
+    }
+
+    function _startingTick(Currency quoteToken) internal view returns (int24) {
+        uint256 initialMarketcapInQuote =
+            FullMath.mulDiv(config.initialMarketcap, 1e18, factory.quotePrice(quoteToken, 1e18));
+        uint160 sqrtTokensPerQuoteX96 =
+            SafeCast.toUint160(Math.sqrt(FullMath.mulDiv(config.totalSupply, 1 << 96, initialMarketcapInQuote)) << 48);
+        return TickMath.getTickAtSqrtPrice(sqrtTokensPerQuoteX96) / config.tickSpacing * config.tickSpacing;
     }
 
     function _unlockCallback(bytes calldata data) internal override returns (bytes memory) {
@@ -137,10 +125,7 @@ contract Launchpad is SafeCallback, Initializable, UUPSUpgradeable {
         (BalanceDelta delta,) = poolManager.modifyLiquidity(
             poolKey,
             ModifyLiquidityParams({
-                tickLower: tickLower,
-                tickUpper: tickUpper,
-                liquidityDelta: int256(uint256(liquidity)),
-                salt: bytes32(0)
+                tickLower: tickLower, tickUpper: tickUpper, liquidityDelta: int256(uint256(liquidity)), salt: bytes32(0)
             }),
             ""
         );
