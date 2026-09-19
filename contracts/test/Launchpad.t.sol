@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Test} from "forge-std/Test.sol";
+import {Test, Vm} from "forge-std/Test.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {MockERC20} from "solmate/src/test/utils/mocks/MockERC20.sol";
@@ -119,6 +119,17 @@ contract LaunchpadTest is Test {
         assertEq(token.name(), "Test Token");
         assertEq(token.symbol(), "TEST");
         assertEq(token.totalSupply(), TOTAL_SUPPLY);
+    }
+
+    function test_launchToken_emitsPoolIdOfCreatedPool() public {
+        vm.recordLogs();
+
+        address token = launchpad.launchToken("Test Token", "TEST", ETH, HOOKS);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        Vm.Log memory tokenLaunched = logs[logs.length - 1];
+        assertEq(tokenLaunched.topics[0], ILaunchpad.TokenLaunched.selector);
+        assertEq(tokenLaunched.topics[3], PoolId.unwrap(poolKeyOf(token, ETH, HOOKS).toId()));
     }
 
     function test_launchToken_putsWholeSupplyIntoPoolAtStartingPrice() public {

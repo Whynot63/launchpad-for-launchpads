@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
+import {PoolId} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {ILaunchpadFactory} from "./ILaunchpadFactory.sol";
 
 interface ILaunchpad {
@@ -14,7 +15,13 @@ interface ILaunchpad {
     }
 
     event TokenLaunched(
-        address indexed token, address indexed creator, Currency quoteToken, IHooks hooks, string name, string symbol
+        address indexed token,
+        address indexed creator,
+        PoolId indexed poolId,
+        Currency quoteToken,
+        IHooks hooks,
+        string name,
+        string symbol
     );
     event ConfigSet(Config config);
     event QuoteEnabledSet(Currency indexed quoteToken, bool enabled);

@@ -9,6 +9,7 @@ import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
 import {SafeCallback} from "@uniswap/v4-periphery/src/base/SafeCallback.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
+import {PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
 import {ModifyLiquidityParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
@@ -83,7 +84,7 @@ contract Launchpad is ILaunchpad, SafeCallback, Initializable, UUPSUpgradeable, 
         poolManager.initialize(poolKey, TickMath.getSqrtPriceAtTick(poolStartingTick));
         poolManager.unlock(abi.encode(poolKey, tokenIsCurrency1, poolStartingTick));
 
-        emit TokenLaunched(token, msg.sender, quoteToken, hooks, name, symbol);
+        emit TokenLaunched(token, msg.sender, PoolIdLibrary.toId(poolKey), quoteToken, hooks, name, symbol);
     }
 
     function _authorizeUpgrade(address) internal view override {

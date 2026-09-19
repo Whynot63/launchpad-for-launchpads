@@ -14,12 +14,13 @@ This leads to two design goals that pull in opposite directions:
 
 ### Technical architecture: monorepo
 
-For simplicity of development, everything lives in a monorepo: it is convenient to deploy, and an LLM gets access to the whole context at once. The repo has a folder for smart contracts, a folder for the web app, and a folder for the indexer.
+For simplicity of development, everything lives in a monorepo: it is convenient to deploy, and an LLM gets access to the whole context at once. The repo has a folder for smart contracts, a folder for each of the two web apps, and a folder for the indexer.
 
 Components:
 
 - `contracts` — base-foundry (for working with B20 tokens)
-- `web-app` — Next.js + wagmi/viem; the backend lives here too (route handlers), no separate backend service
+- `launchpad-factory-app` — the frontend for creating and managing launchpads. Next.js + wagmi/viem; the backend lives here too (route handlers), no separate backend service
+- `launchpad-app` — the frontend of a launchpad itself; a separate service that works independently from `launchpad-factory-app`. Same stack: Next.js + wagmi/viem
 - `indexer` — [Envio](https://envio.dev/)
 
 ### Contracts
@@ -34,3 +35,18 @@ Components:
 4. A launchpad allows launching a token against a whitelisted quote token and with a whitelisted hook.
 5. The launch parameters (total supply, initial market cap in USD, pool fee, tick spacing, enabled quote tokens) are chosen by the launchpad owner; the starting price is derived from the market cap using the factory's quote price.
 6. Hooks are whitelisted at the factory level: because of possible hook scams, users must not be able to write their own hooks without approval.
+
+### Frontend
+
+Screens of `launchpad-factory-app`:
+
+- Create a launchpad
+- Edit a launchpad
+- List of launched launchpads
+- Launchpad statistics
+
+Screens of `launchpad-app`:
+
+- List of tokens
+- Token page
+- Launch a token

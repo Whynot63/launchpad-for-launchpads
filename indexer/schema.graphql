@@ -1,0 +1,53 @@
+type Launchpad {
+  id: ID!
+  creator: String! @index
+  createdAt: Int!
+  tokens: [Token!]! @derivedFrom(field: "launchpad")
+}
+
+type Token {
+  id: ID!
+  launchpad: Launchpad!
+  creator: String! @index
+  poolId: String! @index
+  quoteToken: String!
+  hooks: String!
+  name: String!
+  symbol: String!
+  launchedAt: Int!
+  totalSupply: BigInt!
+  price: BigDecimal!
+  liquidity: BigInt!
+  volume: BigInt!
+  volume24h: BigInt!
+  numTrades24h: Int!
+  trades: [Trade!]! @derivedFrom(field: "token")
+}
+
+type Pool {
+  id: ID!
+  token: Token!
+}
+
+enum TradeDirection {
+  buy
+  sell
+}
+
+type Trade {
+  id: ID!
+  token: Token!
+  timestamp: Int! @index
+  tx: String!
+  amountIn: BigInt!
+  amountOut: BigInt!
+  direction: TradeDirection!
+}
+
+type TokenHourData {
+  id: ID!
+  token: Token!
+  hour: Int!
+  volume: BigInt!
+  numTrades: Int!
+}

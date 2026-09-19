@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+name: launchpad-indexer
+disable_default_cross_chain: true
+contracts:
+- name: LaunchpadFactory
+  events:
+  - event: LaunchpadCreated(address indexed launchpad, address indexed creator)
+- name: Launchpad
+  events:
+  - event: TokenLaunched(address indexed token, address indexed creator, bytes32 indexed poolId, address quoteToken, address hooks, string name, string symbol)
+- name: PoolManager
+  events:
+  - event: Swap(bytes32 indexed id, address indexed sender, int128 amount0, int128 amount1, uint160 sqrtPriceX96, uint128 liquidity, int24 tick, uint24 fee)
+    field_selection:
+      transaction_fields: [hash]
+chains:
+- id: 84532
+  start_block: 0
+  contracts:
+  - name: LaunchpadFactory
+    address:
+    - '0x0000000000000000000000000000000000000000'
+  - name: Launchpad
+  - name: PoolManager
+    address:
+    - '0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408'
