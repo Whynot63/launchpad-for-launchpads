@@ -18,3 +18,6 @@ remappings = [
     "@openzeppelin/contracts/=lib/v4-periphery/lib/v4-core/lib/openzeppelin-contracts/contracts/",
     "solmate/=lib/v4-periphery/lib/v4-core/lib/solmate/",
 ]
+
+[rpc_endpoints]
+base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
