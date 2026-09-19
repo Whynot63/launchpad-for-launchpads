@@ -1,13 +1,21 @@
 import { type Address, formatUnits, parseUnits } from "viem";
+import { hooks } from "./config";
 
 export type LaunchSettingsForm = {
   totalSupply: string;
   initialMarketcapUsd: string;
   poolFeePercent: string;
   tickSpacing: string;
+  hooks: Address;
 };
 
-export type LaunchConfig = { totalSupply: bigint; initialMarketcap: bigint; poolFee: number; tickSpacing: number };
+export type LaunchConfig = {
+  totalSupply: bigint;
+  initialMarketcap: bigint;
+  poolFee: number;
+  tickSpacing: number;
+  hooks: Address;
+};
 
 const TOKEN_DECIMALS = 18;
 const USD_DECIMALS = 18;
@@ -19,6 +27,7 @@ export const DEFAULT_LAUNCH_SETTINGS: LaunchSettingsForm = {
   initialMarketcapUsd: "5000",
   poolFeePercent: "1",
   tickSpacing: "200",
+  hooks: hooks[0]?.address,
 };
 
 export const launchSettingsError = (form: LaunchSettingsForm) => {
@@ -28,6 +37,7 @@ export const launchSettingsError = (form: LaunchSettingsForm) => {
   if (!(fee >= 0 && fee <= MAX_POOL_FEE_PERCENT)) return "Pool fee must be between 0% and 100%";
   const tickSpacing = Number(form.tickSpacing);
   if (!(Number.isInteger(tickSpacing) && tickSpacing >= 1 && tickSpacing <= 32767)) return "Tick spacing must be an integer from 1 to 32767";
+  if (!form.hooks) return "Choose a hook";
   return null;
 };
 
@@ -36,6 +46,7 @@ export const toLaunchConfig = (form: LaunchSettingsForm): LaunchConfig => ({
   initialMarketcap: parseUnits(form.initialMarketcapUsd, USD_DECIMALS),
   poolFee: Math.round(Number(form.poolFeePercent) * POOL_FEE_UNITS_PER_PERCENT),
   tickSpacing: Number(form.tickSpacing),
+  hooks: form.hooks,
 });
 
 export const toLaunchSettingsForm = (config: LaunchConfig): LaunchSettingsForm => ({
@@ -43,6 +54,7 @@ export const toLaunchSettingsForm = (config: LaunchConfig): LaunchSettingsForm =
   initialMarketcapUsd: formatUnits(config.initialMarketcap, USD_DECIMALS),
   poolFeePercent: String(config.poolFee / POOL_FEE_UNITS_PER_PERCENT),
   tickSpacing: String(config.tickSpacing),
+  hooks: config.hooks,
 });
 
 export type EnabledQuoteTokens = Record<Address, boolean>;

@@ -45,6 +45,7 @@ contract LaunchpadTest is Test {
     Currency constant QUOTE_BELOW_B20 = Currency.wrap(0x1111111111111111111111111111111111111111);
     Currency constant QUOTE_ABOVE_B20 = Currency.wrap(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
     IHooks constant HOOKS = IHooks(address(uint160(0x4444 << 144) | uint160(Hooks.BEFORE_INITIALIZE_FLAG)));
+    IHooks constant OTHER_HOOKS = IHooks(address(uint160(0x5555 << 144) | uint160(Hooks.BEFORE_INITIALIZE_FLAG)));
 
     address factoryOwner = makeAddr("factoryOwner");
     address stranger = makeAddr("stranger");
@@ -58,6 +59,7 @@ contract LaunchpadTest is Test {
         poolManager = new PoolManager(address(this));
         swapRouter = new PoolSwapTest(poolManager);
         factory = new LaunchpadFactory(factoryOwner, address(new Launchpad(poolManager)));
+        deployCodeTo("NoopHook.sol:NoopHook", address(HOOKS));
         vm.startPrank(factoryOwner);
         factory.setHookAllowed(HOOKS, true);
         factory.setQuotePrice(ETH, QUOTE_PRICE);
@@ -70,13 +72,12 @@ contract LaunchpadTest is Test {
                     ILaunchpad.initialize,
                     (
                         address(this),
-                        ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING),
+                        ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS),
                         onlyEth()
                     )
                 )
             )
         );
-        deployCodeTo("BeforeInitializeHook.sol:BeforeInitializeHook", address(HOOKS));
         deployQuoteToken(QUOTE_BELOW_B20);
         deployQuoteToken(QUOTE_ABOVE_B20);
     }
@@ -114,7 +115,7 @@ contract LaunchpadTest is Test {
     }
 
     function test_launchToken_createsB20WithConfiguredSupply() public {
-        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH, HOOKS));
+        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH));
 
         assertEq(token.name(), "Test Token");
         assertEq(token.symbol(), "TEST");
@@ -124,7 +125,7 @@ contract LaunchpadTest is Test {
     function test_launchToken_emitsPoolIdOfCreatedPool() public {
         vm.recordLogs();
 
-        address token = launchpad.launchToken("Test Token", "TEST", ETH, HOOKS);
+        address token = launchpad.launchToken("Test Token", "TEST", ETH);
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         Vm.Log memory tokenLaunched = logs[logs.length - 1];
@@ -133,7 +134,7 @@ contract LaunchpadTest is Test {
     }
 
     function test_launchToken_putsWholeSupplyIntoPoolAtStartingPrice() public {
-        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH, HOOKS));
+        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH));
 
         (uint160 sqrtPriceX96, int24 tick,,) = poolManager.getSlot0(poolKeyOf(address(token), ETH, HOOKS).toId());
         assertEq(sqrtPriceX96, TickMath.getSqrtPriceAtTick(STARTING_TICK));
@@ -143,7 +144,7 @@ contract LaunchpadTest is Test {
     }
 
     function test_launchToken_tokenIsBuyableWithEthRightAway() public {
-        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH, HOOKS));
+        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH));
 
         buy(address(token), ETH, 1 ether);
 
@@ -155,7 +156,7 @@ contract LaunchpadTest is Test {
     function test_launchToken_againstQuoteTokenSortedBelowToken() public {
         launchpad.setQuoteEnabled(QUOTE_BELOW_B20, true);
 
-        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", QUOTE_BELOW_B20, HOOKS));
+        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", QUOTE_BELOW_B20));
 
         PoolId poolId = poolKeyOf(address(token), QUOTE_BELOW_B20, HOOKS).toId();
         (, int24 tick,,) = poolManager.getSlot0(poolId);
@@ -169,7 +170,7 @@ contract LaunchpadTest is Test {
     function test_launchToken_againstQuoteTokenSortedAboveTokenMirrorsThePrice() public {
         launchpad.setQuoteEnabled(QUOTE_ABOVE_B20, true);
 
-        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", QUOTE_ABOVE_B20, HOOKS));
+        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", QUOTE_ABOVE_B20));
 
         PoolId poolId = poolKeyOf(address(token), QUOTE_ABOVE_B20, HOOKS).toId();
         (, int24 tick,,) = poolManager.getSlot0(poolId);
@@ -185,8 +186,8 @@ contract LaunchpadTest is Test {
     function test_launchToken_sameQuoteAmountBuysSameTokenAmountInBothSortOrders() public {
         launchpad.setQuoteEnabled(QUOTE_BELOW_B20, true);
         launchpad.setQuoteEnabled(QUOTE_ABOVE_B20, true);
-        IB20 tokenAboveQuote = IB20(launchpad.launchToken("A", "A", QUOTE_BELOW_B20, HOOKS));
-        IB20 tokenBelowQuote = IB20(launchpad.launchToken("B", "B", QUOTE_ABOVE_B20, HOOKS));
+        IB20 tokenAboveQuote = IB20(launchpad.launchToken("A", "A", QUOTE_BELOW_B20));
+        IB20 tokenBelowQuote = IB20(launchpad.launchToken("B", "B", QUOTE_ABOVE_B20));
 
         buy(address(tokenAboveQuote), QUOTE_BELOW_B20, 1 ether);
         buy(address(tokenBelowQuote), QUOTE_ABOVE_B20, 1 ether);
@@ -206,8 +207,8 @@ contract LaunchpadTest is Test {
         launchpad.setQuoteEnabled(QUOTE_BELOW_B20, true);
         launchpad.setQuoteEnabled(QUOTE_ABOVE_B20, true);
 
-        address tokenAboveQuote = launchpad.launchToken("A", "A", QUOTE_BELOW_B20, HOOKS);
-        address tokenBelowQuote = launchpad.launchToken("B", "B", QUOTE_ABOVE_B20, HOOKS);
+        address tokenAboveQuote = launchpad.launchToken("A", "A", QUOTE_BELOW_B20);
+        address tokenBelowQuote = launchpad.launchToken("B", "B", QUOTE_ABOVE_B20);
 
         assertApproxEqRel(initialMarketcapInQuote(tokenAboveQuote, QUOTE_BELOW_B20), 1 ether, 0.021e18);
         assertApproxEqRel(initialMarketcapInQuote(tokenBelowQuote, QUOTE_ABOVE_B20), 1 ether, 0.021e18);
@@ -218,17 +219,17 @@ contract LaunchpadTest is Test {
         factory.setQuotePrice(QUOTE_BELOW_B20, 1e30);
         launchpad.setQuoteEnabled(QUOTE_BELOW_B20, true);
 
-        address token = launchpad.launchToken("Test Token", "TEST", QUOTE_BELOW_B20, HOOKS);
+        address token = launchpad.launchToken("Test Token", "TEST", QUOTE_BELOW_B20);
 
         assertApproxEqRel(initialMarketcapInQuote(token, QUOTE_BELOW_B20), 3000e6, 0.021e18);
     }
 
     function test_launchToken_startingPriceFollowsQuotePrice() public {
-        address tokenAtOldPrice = launchpad.launchToken("A", "A", ETH, HOOKS);
+        address tokenAtOldPrice = launchpad.launchToken("A", "A", ETH);
         vm.prank(factoryOwner);
         factory.setQuotePrice(ETH, QUOTE_PRICE * 2);
 
-        address tokenAtNewPrice = launchpad.launchToken("B", "B", ETH, HOOKS);
+        address tokenAtNewPrice = launchpad.launchToken("B", "B", ETH);
 
         assertApproxEqRel(initialMarketcapInQuote(tokenAtOldPrice, ETH), 1 ether, 0.021e18);
         assertApproxEqRel(initialMarketcapInQuote(tokenAtNewPrice, ETH), 0.5 ether, 0.021e18);
@@ -239,35 +240,35 @@ contract LaunchpadTest is Test {
         factory.setQuotePrice(ETH, 0);
 
         vm.expectRevert(LaunchpadFactory.QuotePriceNotSet.selector);
-        launchpad.launchToken("Test Token", "TEST", ETH, HOOKS);
+        launchpad.launchToken("Test Token", "TEST", ETH);
     }
 
     function testFuzz_launchToken_succeedsForAnyInitialMarketcapInBothSortOrders(uint256 initialMarketcap) public {
         initialMarketcap = bound(initialMarketcap, 100e18, 1_000_000_000e18);
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, initialMarketcap, POOL_FEE, TICK_SPACING));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, initialMarketcap, POOL_FEE, TICK_SPACING, HOOKS));
         launchpad.setQuoteEnabled(QUOTE_BELOW_B20, true);
         launchpad.setQuoteEnabled(QUOTE_ABOVE_B20, true);
 
-        launchpad.launchToken("A", "A", QUOTE_BELOW_B20, HOOKS);
-        launchpad.launchToken("B", "B", QUOTE_ABOVE_B20, HOOKS);
+        launchpad.launchToken("A", "A", QUOTE_BELOW_B20);
+        launchpad.launchToken("B", "B", QUOTE_ABOVE_B20);
     }
 
     function test_launchToken_revertsWhenQuoteNotEnabled() public {
         vm.expectRevert(ILaunchpad.QuoteNotEnabled.selector);
-        launchpad.launchToken("Test Token", "TEST", QUOTE_BELOW_B20, HOOKS);
+        launchpad.launchToken("Test Token", "TEST", QUOTE_BELOW_B20);
     }
 
     function test_launchToken_revertsWhenQuoteWasDisabled() public {
         launchpad.setQuoteEnabled(ETH, false);
 
         vm.expectRevert(ILaunchpad.QuoteNotEnabled.selector);
-        launchpad.launchToken("Test Token", "TEST", ETH, HOOKS);
+        launchpad.launchToken("Test Token", "TEST", ETH);
     }
 
     function test_setConfig_nextLaunchesUseNewConfig() public {
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY / 2, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY / 2, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS));
 
-        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH, HOOKS));
+        IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH));
 
         assertEq(token.totalSupply(), TOTAL_SUPPLY / 2);
     }
@@ -275,7 +276,7 @@ contract LaunchpadTest is Test {
     function test_setConfig_revertsWhenCallerIsNotOwner() public {
         vm.prank(stranger);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS));
     }
 
     function test_setQuoteEnabled_revertsWhenFactoryHasNoQuotePrice() public {
@@ -299,39 +300,67 @@ contract LaunchpadTest is Test {
     }
 
     function test_launchToken_eachLaunchGetsItsOwnToken() public {
-        address first = launchpad.launchToken("Same", "SAME", ETH, HOOKS);
-        address second = launchpad.launchToken("Same", "SAME", ETH, HOOKS);
+        address first = launchpad.launchToken("Same", "SAME", ETH);
+        address second = launchpad.launchToken("Same", "SAME", ETH);
 
         assertTrue(first != second);
     }
 
-    function test_launchToken_revertsWhenHooksNotAllowed() public {
+    function test_launchToken_revertsWhenConfiguredHooksWereDisallowedByFactory() public {
         vm.prank(factoryOwner);
         factory.setHookAllowed(HOOKS, false);
 
         vm.expectRevert(ILaunchpad.HookNotAllowed.selector);
-        launchpad.launchToken("Hooked", "HOOK", ETH, HOOKS);
+        launchpad.launchToken("Hooked", "HOOK", ETH);
     }
 
-    function test_launchToken_revertsWithoutHooks() public {
+    function test_setConfig_revertsWhenHooksNotAllowedByFactory() public {
         vm.expectRevert(ILaunchpad.HookNotAllowed.selector);
-        launchpad.launchToken("Hookless", "NOHOOK", ETH, IHooks(address(0)));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, OTHER_HOOKS));
+    }
+
+    function test_setConfig_revertsWithoutHooksUnlessFactoryAllowsIt() public {
+        ILaunchpad.Config memory hookless =
+            ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, IHooks(address(0)));
+
+        vm.expectRevert(ILaunchpad.HookNotAllowed.selector);
+        launchpad.setConfig(hookless);
+
+        vm.prank(factoryOwner);
+        factory.setHookAllowed(IHooks(address(0)), true);
+        launchpad.setConfig(hookless);
+        address token = launchpad.launchToken("Hookless", "NOHOOK", ETH);
+
+        (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(poolKeyOf(token, ETH, IHooks(address(0))).toId());
+        assertGt(sqrtPriceX96, 0);
+    }
+
+    function test_setConfig_switchesHooksForNextLaunches() public {
+        deployCodeTo("NoopHook.sol:NoopHook", address(OTHER_HOOKS));
+        vm.prank(factoryOwner);
+        factory.setHookAllowed(OTHER_HOOKS, true);
+
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, OTHER_HOOKS));
+        address token = launchpad.launchToken("Test Token", "TEST", ETH);
+
+        (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(poolKeyOf(token, ETH, OTHER_HOOKS).toId());
+        assertGt(sqrtPriceX96, 0);
     }
 
     function test_initialize_revertsWhenCalledTwice() public {
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        launchpad.initialize(address(1), ILaunchpad.Config(1, 1, 0, 1), onlyEth());
+        launchpad.initialize(address(1), ILaunchpad.Config(1, 1, 0, 1, HOOKS), onlyEth());
     }
 
     function test_initialize_revertsOnImplementation() public {
         Launchpad implementation = new Launchpad(poolManager);
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        implementation.initialize(address(1), ILaunchpad.Config(1, 1, 0, 1), onlyEth());
+        implementation.initialize(address(1), ILaunchpad.Config(1, 1, 0, 1, HOOKS), onlyEth());
     }
 
     function test_upgrade_factoryOwnerSwitchesImplementationAndKeepsState() public {
-        address tokenLaunchedBeforeUpgrade = launchpad.launchToken("Test Token", "TEST", ETH, HOOKS);
+        address tokenLaunchedBeforeUpgrade = launchpad.launchToken("Test Token", "TEST", ETH);
         address newImplementation = address(new LaunchpadV2(poolManager));
 
         vm.prank(factoryOwner);
@@ -340,7 +369,7 @@ contract LaunchpadTest is Test {
         assertEq(LaunchpadV2(address(launchpad)).version(), 2);
         assertEq(launchpad.owner(), address(this));
         assertEq(launchpad.launchCount(), 1);
-        assertTrue(launchpad.launchToken("Test Token", "TEST", ETH, HOOKS) != tokenLaunchedBeforeUpgrade);
+        assertTrue(launchpad.launchToken("Test Token", "TEST", ETH) != tokenLaunchedBeforeUpgrade);
     }
 
     function test_upgrade_revertsWhenCallerIsLaunchpadOwner() public {

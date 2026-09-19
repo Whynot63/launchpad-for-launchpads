@@ -16,7 +16,7 @@ export default defineRailway(() => {
       DATABASE_URL: db.env.DATABASE_URL,
       RPC_URL: preserve(),
       NEXT_PUBLIC_CHAIN_ID: "84532",
-      NEXT_PUBLIC_FACTORY_ADDRESS: preserve(),
+      NEXT_PUBLIC_FACTORY_ADDRESS: "0xb02F9b23070E7a1Ad3160beC850c485fB7f48939",
       NEXT_PUBLIC_INDEXER_URL: preserve(),
       NEXT_PUBLIC_LAUNCHPAD_DOMAIN: LAUNCHPAD_DOMAIN,
     },

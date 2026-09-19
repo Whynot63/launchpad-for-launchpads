@@ -1,5 +1,7 @@
 "use client";
 
+import type { Address } from "viem";
+import { hooks } from "@/lib/config";
 import type { LaunchSettingsForm } from "@/lib/launchSettings";
 import { Field, Input } from "./ui";
 
@@ -29,6 +31,22 @@ export function LaunchSettingsFields({
       <Field label="Tick Spacing" hint="Price granularity of the pool. 200 fits a 1% fee.">
         <Input inputMode="numeric" value={value.tickSpacing} onChange={(event) => set({ tickSpacing: event.target.value })} />
       </Field>
+      <div className="sm:col-span-2">
+        <Field label="Hook" hint="Every token launched here uses this hook.">
+          <select
+            className="h-11 w-full rounded-xl border border-line bg-ink px-4 text-sm text-white outline-none focus:border-brand"
+            value={value.hooks ?? ""}
+            onChange={(event) => set({ hooks: event.target.value as Address })}
+          >
+            {hooks.length === 0 && <option value="">No hooks are whitelisted yet</option>}
+            {hooks.map((hook) => (
+              <option key={hook.address} value={hook.address}>
+                {hook.description}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
     </div>
   );
 }

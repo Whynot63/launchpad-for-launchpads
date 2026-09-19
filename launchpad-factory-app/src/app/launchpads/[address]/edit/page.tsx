@@ -43,13 +43,13 @@ export default function EditLaunchpadPage({ params }: PageProps<"/launchpads/[ad
     return <Notice tone="muted">{stored.isError || onchain.isError ? "Launchpad not found." : "Loading…"}</Notice>;
   }
 
-  const [owner, [totalSupply, initialMarketcap, poolFee, tickSpacing]] = onchain.data;
+  const [owner, [totalSupply, initialMarketcap, poolFee, tickSpacing, hooks]] = onchain.data;
   return (
     <EditLaunchpadForm
       launchpad={launchpad}
       owner={owner}
       initialBranding={stored.data}
-      initialSettings={toLaunchSettingsForm({ totalSupply, initialMarketcap, poolFee, tickSpacing })}
+      initialSettings={toLaunchSettingsForm({ totalSupply, initialMarketcap, poolFee, tickSpacing, hooks })}
       isQuoteEnabled={quoteFlags.data}
       refetchOnchain={() => Promise.all([onchain.refetch(), quoteFlags.refetch()])}
     />

@@ -53,10 +53,11 @@ contract Launchpad is ILaunchpad, SafeCallback, Initializable, UUPSUpgradeable, 
         _setQuoteEnabled(quoteToken, enabled);
     }
 
-    function launchToken(string calldata name, string calldata symbol, Currency quoteToken, IHooks hooks)
+    function launchToken(string calldata name, string calldata symbol, Currency quoteToken)
         external
         returns (address token)
     {
+        IHooks hooks = config.hooks;
         if (!factory.isHookAllowed(hooks)) revert HookNotAllowed();
         if (!isQuoteEnabled[quoteToken]) revert QuoteNotEnabled();
 
@@ -92,6 +93,7 @@ contract Launchpad is ILaunchpad, SafeCallback, Initializable, UUPSUpgradeable, 
     }
 
     function _setConfig(Config calldata config_) internal {
+        if (!factory.isHookAllowed(config_.hooks)) revert HookNotAllowed();
         config = config_;
         emit ConfigSet(config_);
     }

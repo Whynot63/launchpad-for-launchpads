@@ -12,6 +12,7 @@ interface ILaunchpad {
         uint256 initialMarketcap;
         uint24 poolFee;
         int24 tickSpacing;
+        IHooks hooks;
     }
 
     event TokenLaunched(
@@ -36,7 +37,7 @@ interface ILaunchpad {
 
     function setQuoteEnabled(Currency quoteToken, bool enabled) external;
 
-    function launchToken(string calldata name, string calldata symbol, Currency quoteToken, IHooks hooks)
+    function launchToken(string calldata name, string calldata symbol, Currency quoteToken)
         external
         returns (address token);
 
@@ -45,7 +46,7 @@ interface ILaunchpad {
     function config()
         external
         view
-        returns (uint256 totalSupply, uint256 initialMarketcap, uint24 poolFee, int24 tickSpacing);
+        returns (uint256 totalSupply, uint256 initialMarketcap, uint24 poolFee, int24 tickSpacing, IHooks hooks);
 
     function launchCount() external view returns (uint256);
 

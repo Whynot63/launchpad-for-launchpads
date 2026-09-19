@@ -12,7 +12,8 @@ contract DeployFactory is Script {
         IPoolManager poolManager = IPoolManager(vm.envAddress("POOL_MANAGER"));
 
         vm.startBroadcast();
-        factory = new LaunchpadFactory(msg.sender, address(new Launchpad(poolManager)));
+        (, address deployer,) = vm.readCallers();
+        factory = new LaunchpadFactory(deployer, address(new Launchpad(poolManager)));
         vm.stopBroadcast();
     }
 }

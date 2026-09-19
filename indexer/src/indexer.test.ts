@@ -14,6 +14,7 @@ const ETH = "0x0000000000000000000000000000000000000000" as const;
 const HOOKS = "0x4444000000000000000000000000000000002000" as const;
 const TOTAL_SUPPLY = 10n ** 27n;
 const Q96 = 2n ** 96n;
+const START_BLOCK = 47046494;
 const HOUR = 3600;
 const LAUNCHED_AT = 100 * HOUR;
 
@@ -50,7 +51,7 @@ afterAll(() => rpc.close());
 const launchpadCreated = {
   contract: "LaunchpadFactory" as const,
   event: "LaunchpadCreated" as const,
-  block: { number: 1, timestamp: 1000 },
+  block: { number: START_BLOCK + 1, timestamp: 1000 },
   params: { launchpad: LAUNCHPAD, creator: LAUNCHPAD_CREATOR },
 };
 
@@ -58,7 +59,7 @@ const tokenLaunched = {
   contract: "Launchpad" as const,
   event: "TokenLaunched" as const,
   srcAddress: LAUNCHPAD,
-  block: { number: 2, timestamp: LAUNCHED_AT },
+  block: { number: START_BLOCK + 2, timestamp: LAUNCHED_AT },
   params: {
     token: TOKEN,
     creator: TOKEN_CREATOR,
@@ -128,8 +129,8 @@ describe("trades", () => {
           simulate: [
             launchpadCreated,
             tokenLaunched,
-            swap(3, LAUNCHED_AT + 60, "0xaa", { amount0: -(10n ** 18n), amount1: 9n * 10n ** 23n, sqrtPriceX96: 500n * Q96 }),
-            swap(4, LAUNCHED_AT + HOUR, "0xbb", { amount0: 4n * 10n ** 17n, amount1: -(5n * 10n ** 23n), sqrtPriceX96: 800n * Q96 }),
+            swap(START_BLOCK + 3, LAUNCHED_AT + 60, "0xaa", { amount0: -(10n ** 18n), amount1: 9n * 10n ** 23n, sqrtPriceX96: 500n * Q96 }),
+            swap(START_BLOCK + 4, LAUNCHED_AT + HOUR, "0xbb", { amount0: 4n * 10n ** 17n, amount1: -(5n * 10n ** 23n), sqrtPriceX96: 800n * Q96 }),
           ],
         },
       },
@@ -171,8 +172,8 @@ describe("trades", () => {
           simulate: [
             launchpadCreated,
             tokenLaunched,
-            swap(3, LAUNCHED_AT + 60, "0xaa", { amount0: -(10n ** 18n), amount1: 9n * 10n ** 23n, sqrtPriceX96: 500n * Q96 }),
-            swap(4, LAUNCHED_AT + 25 * HOUR, "0xbb", { amount0: -(2n * 10n ** 18n), amount1: 10n ** 23n, sqrtPriceX96: 400n * Q96 }),
+            swap(START_BLOCK + 3, LAUNCHED_AT + 60, "0xaa", { amount0: -(10n ** 18n), amount1: 9n * 10n ** 23n, sqrtPriceX96: 500n * Q96 }),
+            swap(START_BLOCK + 4, LAUNCHED_AT + 25 * HOUR, "0xbb", { amount0: -(2n * 10n ** 18n), amount1: 10n ** 23n, sqrtPriceX96: 400n * Q96 }),
           ],
         },
       },
@@ -193,7 +194,7 @@ describe("trades", () => {
           simulate: [
             launchpadCreated,
             tokenLaunched,
-            swap(3, LAUNCHED_AT + 60, "0xaa", { id: OTHER_POOL_ID, amount0: -1n, amount1: 1n, sqrtPriceX96: Q96 }),
+            swap(START_BLOCK + 3, LAUNCHED_AT + 60, "0xaa", { id: OTHER_POOL_ID, amount0: -1n, amount1: 1n, sqrtPriceX96: Q96 }),
           ],
         },
       },

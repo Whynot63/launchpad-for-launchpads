@@ -94,7 +94,7 @@ export default function CreateLaunchpadPage() {
 
       <details className="group rounded-2xl border border-line bg-surface/80 backdrop-blur">
         <summary className="cursor-pointer list-none px-6 py-4 text-sm font-medium">
-          Launch Settings <span className="text-muted group-open:hidden">— defaults: 1B supply, $5K market cap, 1% fee, ETH</span>
+          Launch Settings <span className="text-muted group-open:hidden">— defaults: 1B supply, $5K market cap, 1% fee, ETH, default hook</span>
         </summary>
         <fieldset disabled={Boolean(created)} className="flex flex-col gap-5 border-t border-line p-6 disabled:opacity-60">
           <LaunchSettingsFields value={settings} onChange={setSettings} />

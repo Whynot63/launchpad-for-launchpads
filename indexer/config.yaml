@@ -15,11 +15,11 @@ contracts:
       transaction_fields: [hash]
 chains:
 - id: 84532
-  start_block: 0
+  start_block: 47046494
   contracts:
   - name: LaunchpadFactory
     address:
-    - '0x0000000000000000000000000000000000000000'
+    - '0xb02F9b23070E7a1Ad3160beC850c485fB7f48939'
   - name: Launchpad
   - name: PoolManager
     address:
