@@ -21,3 +21,9 @@ Components:
 - `contracts` — base-foundry (for working with B20 tokens)
 - `web-app` — Next.js + wagmi/viem; the backend lives here too (route handlers), no separate backend service
 - `indexer` — [Envio](https://envio.dev/)
+
+### Contracts
+
+- **Factory with a contract per launchpad.** A factory deploys a separate smart contract for each launchpad. This encapsulates the logic of each launchpad and makes it possible to upgrade features for each launchpad independently.
+- **Token launch via one-sided liquidity, without an explicit migration.** If needed, a migration can be simulated on the frontend. Without a migration, tokens are immediately visible in all bots and trading apps, because they go straight into Uniswap — unlike the bonding curve approach.
+- **A launchpad is a proxy.** Each launchpad is deployed as an upgradeable proxy, so that big launchpads can ship their own upgrades in the future. It costs us nothing, but adds flexibility.

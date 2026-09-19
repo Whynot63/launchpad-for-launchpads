@@ -1,0 +1,23 @@
+{
+  "contracts/lib/base-std": {
+    "rev": "f14a2e466b6b45275d9b781b3a85adacd8bf58b4"
+  },
+  "contracts/lib/forge-std": {
+    "rev": "3e577a156f3ef021749e37be48a9804702a80b6e"
+  },
+  "contracts/lib/v4-periphery": {
+    "rev": "9969eec44cfdf07e24b41de47f40276a58401976"
+  },
+  "lib/base-std": {
+    "rev": "f14a2e466b6b45275d9b781b3a85adacd8bf58b4"
+  },
+  "lib/forge-std": {
+    "rev": "3e577a156f3ef021749e37be48a9804702a80b6e"
+  },
+  "lib/v4-core": {
+    "rev": "46c6834698c48bc4a463a86d8420f4eb1d7f3b75"
+  },
+  "lib/v4-periphery": {
+    "rev": "9969eec44cfdf07e24b41de47f40276a58401976"
+  }
+}
