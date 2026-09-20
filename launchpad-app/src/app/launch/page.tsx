@@ -5,5 +5,5 @@ export const dynamic = "force-dynamic";
 
 export default async function LaunchTokenPage() {
   const launchpad = await getCurrentLaunchpad();
-  return <LaunchTokenForm launchpad={launchpad.address} launchpadName={launchpad.name} />;
+  return <LaunchTokenForm launchpad={launchpad.address} accentColor={launchpad.accentColor} />;
 }

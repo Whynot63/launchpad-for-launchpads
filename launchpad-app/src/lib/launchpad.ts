@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import type { Address } from "viem";
-import { factoryAppUrl } from "./config";
+import { FACTORY_APP_INTERNAL_URL } from "./factoryApp";
 
 export type Launchpad = {
   address: Address;
@@ -13,8 +13,6 @@ export type Launchpad = {
   accentColor: string;
   owner: Address;
 };
-
-const FACTORY_APP_INTERNAL_URL = process.env.FACTORY_APP_INTERNAL_URL ?? factoryAppUrl;
 
 export const launchpadSlugFromHost = (host: string) => host.split(":")[0].split(".")[0];
 
@@ -27,5 +25,3 @@ export const findCurrentLaunchpad = cache(async () => {
 });
 
 export const getCurrentLaunchpad = async () => (await findCurrentLaunchpad()) ?? notFound();
-
-export const logoSrc = (launchpad: Launchpad) => (launchpad.logoUrl ? `${factoryAppUrl}${launchpad.logoUrl}` : "");

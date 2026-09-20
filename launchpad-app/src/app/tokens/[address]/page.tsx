@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, Notice, Stat } from "@/components/ui";
+import { fetchTokenDetails } from "@/lib/factoryApp";
 import { explorerTxUrl } from "@/lib/config";
 import { formatAge, formatMarketCap, formatQuoteAmount, formatTokenAmount, formatTokenPrice, shortAddress } from "@/lib/format";
 import { fetchToken } from "@/lib/indexer";
@@ -10,7 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function TokenPage({ params }: PageProps<"/tokens/[address]">) {
   const launchpad = await getCurrentLaunchpad();
   const { address } = await params;
-  const token = await fetchToken(launchpad.address, address).catch(() => undefined);
+  const [token, details] = await Promise.all([
+    fetchToken(launchpad.address, address).catch(() => undefined),
+    fetchTokenDetails(address),
+  ]);
 
   if (!token) {
     return (
@@ -28,12 +33,35 @@ export default async function TokenPage({ params }: PageProps<"/tokens/[address]
         <Link href="/" className="text-sm text-muted hover:text-white">
           ← {launchpad.name}
         </Link>
-        <h1 className="heading mt-2 text-3xl">
-          {token.symbol} <span className="font-normal text-muted">{token.name}</span>
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          {token.id} · launched {formatAge(token.launchedAt)} ago by {shortAddress(token.creator)}
-        </p>
+        <div className="mt-3 flex items-center gap-4">
+          <LaunchpadLogo name={token.symbol} logoUrl={details?.imageUrl ?? ""} accentColor={launchpad.accentColor} size={64} />
+          <div className="min-w-0">
+            <h1 className="heading text-3xl">
+              {token.symbol} <span className="font-normal text-muted">{token.name}</span>
+            </h1>
+            <p className="mt-1 truncate text-sm text-muted">
+              {token.id} · launched {formatAge(token.launchedAt)} ago by {shortAddress(token.creator)}
+            </p>
+          </div>
+        </div>
+        {details?.description && <p className="mt-4 max-w-2xl text-muted">{details.description}</p>}
+        {details && (
+          <p className="mt-3 flex flex-wrap gap-4 text-sm">
+            {(
+              [
+                ["Website", details.website],
+                ["X", details.twitter],
+                ["Telegram", details.telegram],
+              ] as const
+            )
+              .filter(([, url]) => url)
+              .map(([label, url]) => (
+                <a key={label} href={url} target="_blank" rel="noreferrer" className="text-brand hover:underline">
+                  {label}
+                </a>
+              ))}
+          </p>
+        )}
       </section>
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">

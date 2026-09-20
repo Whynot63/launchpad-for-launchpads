@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, buttonClass } from "@/components/ui";
+import { fetchLaunchpadTokenDetails } from "@/lib/factoryApp";
 import { formatAge, formatMarketCap, formatQuoteAmount, formatTokenPrice } from "@/lib/format";
 import { type IndexedToken, fetchLaunchpadTokens } from "@/lib/indexer";
 import { getCurrentLaunchpad } from "@/lib/launchpad";
@@ -8,7 +10,10 @@ export const dynamic = "force-dynamic";
 
 export default async function TokensPage() {
   const launchpad = await getCurrentLaunchpad();
-  const tokens = await fetchLaunchpadTokens(launchpad.address).catch((): IndexedToken[] | undefined => undefined);
+  const [tokens, detailsByToken] = await Promise.all([
+    fetchLaunchpadTokens(launchpad.address).catch((): IndexedToken[] | undefined => undefined),
+    fetchLaunchpadTokenDetails(launchpad.address),
+  ]);
 
   return (
     <div className="flex flex-col gap-10">
@@ -42,8 +47,16 @@ export default async function TokensPage() {
                 {tokens.map((token) => (
                   <tr key={token.id} className="border-t border-line transition hover:bg-raised/60">
                     <td className="px-6 py-4">
-                      <Link href={`/tokens/${token.id}`} className="font-medium hover:text-brand">
-                        {token.symbol} <span className="font-normal text-muted">{token.name}</span>
+                      <Link href={`/tokens/${token.id}`} className="flex items-center gap-3 font-medium hover:text-brand">
+                        <LaunchpadLogo
+                          name={token.symbol}
+                          logoUrl={detailsByToken.get(token.id.toLowerCase())?.imageUrl ?? ""}
+                          accentColor={launchpad.accentColor}
+                          size={32}
+                        />
+                        <span>
+                          {token.symbol} <span className="font-normal text-muted">{token.name}</span>
+                        </span>
                       </Link>
                     </td>
                     <td className="px-6 py-4">{formatTokenPrice(token.price, token.quoteToken)}</td>

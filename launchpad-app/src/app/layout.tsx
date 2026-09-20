@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import type { CSSProperties } from "react";
 import { Header } from "@/components/Header";
-import { findCurrentLaunchpad, logoSrc } from "@/lib/launchpad";
+import { findCurrentLaunchpad } from "@/lib/launchpad";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: launchpad.name,
     description: launchpad.description || `Launch and trade tokens on ${launchpad.name}.`,
-    icons: { icon: logoSrc(launchpad) || "/mark.svg" },
+    icons: { icon: launchpad.logoUrl || "/mark.svg" },
   };
 }
 

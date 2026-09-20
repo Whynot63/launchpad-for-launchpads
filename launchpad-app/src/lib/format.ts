@@ -36,4 +36,8 @@ export const formatAge = (timestamp: number) => {
   return `${Math.floor(minutes / (60 * 24))}d`;
 };
 
+const precise = new Intl.NumberFormat("en-US", { maximumSignificantDigits: 3, maximumFractionDigits: 20 });
+
+export const formatUsdPrecise = (usd: number) => `$${precise.format(usd)}`;
+
 export const shortAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
