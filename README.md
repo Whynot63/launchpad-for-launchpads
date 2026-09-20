@@ -122,6 +122,12 @@ Known limitations:
 ### What's next: product for launchpad creators
 
 - Ship other hooks (for example, a hook that reinvests all fees into the launchpad's own token).
+- Extra customization through different token contracts: right now we launch only B20, but a launchpad could also pick a token factory and launch different tokens with different restrictions. The mechanism is the same as with hooks — the launchpad creator picks one of the whitelisted options at the start.
 - Add more ways to customize a launchpad (background, fonts, widgets, setup Google Analytics tag / Facebook pixel for analytics, and so on).
 - Add an admin panel that shows all launched launchpads and their statistics.
 - Let launchpad creators connect their own domains: give them an instruction on how to set a CNAME DNS record.
+
+### What's next: tech
+
+- Right now we index all swaps in Uniswap. In real life this will be a very heavy load, so we will need to add an event to the hook and index by it.
+- Multichain: deploy the contracts on all popular networks, let the creator pick the networks (one or several) when creating a launchpad, and extend the indexer to all deployed networks.
