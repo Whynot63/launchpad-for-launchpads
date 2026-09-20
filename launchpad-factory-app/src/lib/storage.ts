@@ -1,11 +1,12 @@
 import { AwsClient } from "aws4fetch";
 
-const client = new AwsClient({
-  accessKeyId: process.env.S3_ACCESS_KEY_ID!,
-  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
-  region: process.env.S3_REGION,
-  service: "s3",
-});
+const createClient = () =>
+  new AwsClient({
+    accessKeyId: process.env.S3_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
+    region: process.env.S3_REGION,
+    service: "s3",
+  });
 
 const objectUrl = (key: string) => {
   const endpoint = new URL(process.env.S3_ENDPOINT!);
@@ -15,9 +16,9 @@ const objectUrl = (key: string) => {
 };
 
 export const putObject = async (key: string, body: ArrayBuffer, contentType: string) => {
-  const signed = await client.sign(objectUrl(key), { method: "PUT", body, headers: { "content-type": contentType } });
+  const signed = await createClient().sign(objectUrl(key), { method: "PUT", body, headers: { "content-type": contentType } });
   const response = await fetch(signed.url, { method: "PUT", body, headers: signed.headers });
   if (!response.ok) throw new Error(`Storage upload failed with status ${response.status}: ${await response.text()}`);
 };
 
-export const getObject = (key: string) => client.fetch(objectUrl(key));
+export const getObject = (key: string) => createClient().fetch(objectUrl(key));

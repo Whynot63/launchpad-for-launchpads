@@ -4,8 +4,6 @@ import whitelist from "./whitelist.json";
 
 export const chain = process.env.NEXT_PUBLIC_CHAIN_ID === "31337" ? foundry : baseSepolia;
 
-export const indexerUrl = process.env.NEXT_PUBLIC_INDEXER_URL ?? "http://localhost:8080/v1/graphql";
-
 export const factoryAppUrl = process.env.NEXT_PUBLIC_FACTORY_APP_URL ?? "http://localhost:3000";
 
 export type QuoteToken = { address: Address; symbol: string; decimals: number };

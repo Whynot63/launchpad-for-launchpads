@@ -1,4 +1,6 @@
-import { indexerUrl } from "./config";
+import "server-only";
+
+const INDEXER_URL = process.env.INDEXER_URL ?? "http://localhost:8080/v1/graphql";
 
 export type IndexedToken = {
   id: string;
@@ -28,7 +30,7 @@ const TOKEN_FIELDS =
   "id creator name symbol quoteToken launchedAt totalSupply price liquidity volume volume24h numTrades24h";
 
 const query = async <Data>(document: string, variables: Record<string, unknown>) => {
-  const response = await fetch(indexerUrl, {
+  const response = await fetch(INDEXER_URL, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ query: document, variables }),

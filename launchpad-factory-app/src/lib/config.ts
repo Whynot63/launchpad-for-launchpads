@@ -6,8 +6,6 @@ export const chain = process.env.NEXT_PUBLIC_CHAIN_ID === "31337" ? foundry : ba
 
 export const factoryAddress = (process.env.NEXT_PUBLIC_FACTORY_ADDRESS ?? zeroAddress) as Address;
 
-export const indexerUrl = process.env.NEXT_PUBLIC_INDEXER_URL ?? "http://localhost:8080/v1/graphql";
-
 export const launchpadDomain = process.env.NEXT_PUBLIC_LAUNCHPAD_DOMAIN ?? "launch.localhost:3001";
 
 export type Hook = { address: Address; description: string };
