@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { TradeWidget } from "@/components/TradeWidget";
+import { ClaimFees } from "@/components/ClaimFees";
 import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, Notice, Stat } from "@/components/ui";
-import { fetchQuoteTokens, fetchTokenDetails } from "@/lib/factoryApp";
+import { fetchQuoteTokens, fetchTokenDetails, isFeeHook } from "@/lib/factoryApp";
 import { explorerTxUrl, findQuoteToken } from "@/lib/config";
 import { formatAge, formatMarketCap, formatQuoteAmount, formatTokenAmount, formatTokenPrice, shortAddress } from "@/lib/format";
 import { fetchToken } from "@/lib/indexer";
@@ -30,6 +31,7 @@ export default async function TokenPage({ params }: PageProps<"/tokens/[address]
   }
 
   const quoteToken = findQuoteToken(quoteTokens, token.quoteToken);
+  const collectsCreatorFees = await isFeeHook(token.hooks);
 
   return (
     <div className="flex flex-col gap-8">
@@ -75,7 +77,18 @@ export default async function TokenPage({ params }: PageProps<"/tokens/[address]
         <Stat label="Liquidity" value={formatQuoteAmount(token.liquidity, quoteToken)} />
         <Stat label="Volume 24h" value={formatQuoteAmount(token.volume24h, quoteToken)} />
         </section>
-        <TradeWidget token={token} quoteToken={quoteToken} launchpad={launchpad.address} />
+        <div className="flex flex-col gap-6">
+          <TradeWidget token={token} quoteToken={quoteToken} launchpad={launchpad.address} />
+          {collectsCreatorFees && (
+            <ClaimFees
+              title="Your Creator Fees"
+              hook={token.hooks as `0x${string}`}
+              feeAccount={token.creator as `0x${string}`}
+              claimer={token.creator as `0x${string}`}
+              quoteTokens={quoteTokens}
+            />
+          )}
+        </div>
       </div>
 
       <section className="flex flex-col gap-4">

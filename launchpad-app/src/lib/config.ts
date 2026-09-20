@@ -5,6 +5,8 @@ export const chain = process.env.NEXT_PUBLIC_CHAIN_ID === "31337" ? foundry : ba
 
 export const factoryAppUrl = process.env.NEXT_PUBLIC_FACTORY_APP_URL ?? "http://localhost:3000";
 
+export type Hook = { address: Address; description: string; hasFeeSetup?: boolean };
+
 export type QuoteToken = { address: Address; symbol: string; decimals: number };
 
 export const findQuoteToken = (quoteTokens: QuoteToken[], address: string) =>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { LaunchpadFees } from "@/components/LaunchpadFees";
 import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, Stat, buttonClass } from "@/components/ui";
 import { launchpadDomain, launchpadUrl } from "@/lib/config";
@@ -46,6 +47,8 @@ export default async function LaunchpadStatsPage({ params }: PageProps<"/launchp
         <Stat label="Trades 24h" value={formatCompact(indexed?.numTrades24h ?? 0)} />
         <Stat label="Total Volume" value={formatUsd(indexed?.volumeUsd)} />
       </section>
+
+      <LaunchpadFees launchpad={launchpad.address as `0x${string}`} />
 
       <Card className="overflow-x-auto p-0">
         <table className="w-full min-w-[640px] text-left text-sm">

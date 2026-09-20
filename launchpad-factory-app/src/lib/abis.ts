@@ -16,4 +16,8 @@ export const launchpadAbi = parseAbi([
   "event TokenLaunched(address indexed token, address indexed creator, bytes32 indexed poolId, address quoteToken, address hooks, string name, string symbol)",
 ]);
 
-export const feeHookAbi = parseAbi(["function setupHookFee(uint16 launchpadFeeBps, uint16 creatorFeeBps)"]);
+export const feeHookAbi = parseAbi([
+  "function setupHookFee(uint16 launchpadFeeBps, uint16 creatorFeeBps)",
+  "function collectableFees(address account, address currency) view returns (uint256)",
+  "function collectFees(address account, address currency, address to) returns (uint256 amount)",
+]);
