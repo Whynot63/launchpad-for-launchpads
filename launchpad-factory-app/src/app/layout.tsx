@@ -7,9 +7,9 @@ import "./globals.css";
 const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
-  title: "Launchpad Factory — XXX",
-  description: "Create and run your own token launchpad on XXX infrastructure.",
-  icons: { icon: "/xxx-mark.svg" },
+  title: "Launchpad Factory",
+  description: "Create and run your own token launchpad on shared launch infrastructure.",
+  icons: { icon: "/mark.svg" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

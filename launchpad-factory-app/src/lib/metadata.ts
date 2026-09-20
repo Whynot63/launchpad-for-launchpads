@@ -9,7 +9,7 @@ export type LaunchpadMetadata = {
 
 export type StoredLaunchpad = LaunchpadMetadata & { owner: string; createdAt: string };
 
-const RESERVED_SLUGS = ["www", "app", "api", "admin", "launch", "xxx"];
+const RESERVED_SLUGS = ["www", "app", "api", "admin", "launch"];
 const SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$/;
 const ADDRESS_PATTERN = /^0x[0-9a-fA-F]{40}$/;
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
@@ -37,7 +37,7 @@ export const isSignatureFresh = (issuedAt: number) => Math.abs(Date.now() - issu
 
 export const metadataMessage = (metadata: LaunchpadMetadata, issuedAt: number) =>
   [
-    "Set XXX launchpad branding",
+    "Set launchpad branding",
     `Launchpad: ${metadata.address.toLowerCase()}`,
     `Subdomain: ${metadata.slug}`,
     `Name: ${metadata.name}`,

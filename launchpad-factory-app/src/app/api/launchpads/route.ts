@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const launchpad = metadata.address as Address;
   const isKnown = Boolean(await findLaunchpad(launchpad));
   if (!isKnown && !(creationTxHash && (await wasCreatedByFactory(launchpad, creationTxHash)))) {
-    return error("This launchpad was not created by the XXX factory", 400);
+    return error("This launchpad was not created by the launchpad factory", 400);
   }
 
   const owner = await publicClient.readContract({ address: launchpad, abi: launchpadAbi, functionName: "owner" });

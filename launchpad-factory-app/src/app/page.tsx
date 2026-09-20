@@ -21,7 +21,7 @@ export default async function LaunchpadsPage() {
         <p className="eyebrow">Launchpad as a Service</p>
         <h1 className="heading max-w-2xl text-4xl sm:text-5xl">Your Own Token Launchpad, Live in Two Clicks.</h1>
         <p className="max-w-xl text-muted">
-          Pick a name and a subdomain. XXX handles the contracts, liquidity, and indexing — you run the community.
+          Pick a name and a subdomain. We handle the contracts, liquidity, and indexing — you run the community.
         </p>
         <Link href="/create" className={buttonClass()}>
           Create Launchpad
