@@ -1,5 +1,5 @@
 import "server-only";
-import { factoryAppUrl } from "./config";
+import { type QuoteToken, factoryAppUrl } from "./config";
 import type { StoredToken } from "./tokenMetadata";
 
 export const FACTORY_APP_INTERNAL_URL = process.env.FACTORY_APP_INTERNAL_URL ?? factoryAppUrl;
@@ -13,3 +13,8 @@ export const fetchTokenDetails = (token: string) => getJson<StoredToken>(`/api/t
 
 export const fetchLaunchpadTokenDetails = async (launchpad: string) =>
   new Map(((await getJson<StoredToken[]>(`/api/tokens?launchpad=${launchpad}`)) ?? []).map((token) => [token.address, token]));
+
+export const fetchQuoteTokens = async () => {
+  const response = await fetch(`${FACTORY_APP_INTERNAL_URL}/api/whitelist`, { next: { revalidate: 60 } }).catch(() => undefined);
+  return response?.ok ? ((await response.json()) as { quotes: QuoteToken[] }).quotes : [];
+};

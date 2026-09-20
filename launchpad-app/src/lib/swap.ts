@@ -58,6 +58,7 @@ export const quoterAbi = [
 export const erc20Abi = parseAbi([
   "function allowance(address owner, address spender) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)",
+  "function balanceOf(address account) view returns (uint256)",
 ]);
 
 export const poolKeyFor = (token: Address, quoteToken: Address, fee: number, tickSpacing: number, hooks: Address): PoolKey => {

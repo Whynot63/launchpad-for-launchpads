@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { BuyWidget } from "@/components/BuyWidget";
+import { TradeWidget } from "@/components/TradeWidget";
 import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, Notice, Stat } from "@/components/ui";
-import { fetchTokenDetails } from "@/lib/factoryApp";
-import { explorerTxUrl } from "@/lib/config";
+import { fetchQuoteTokens, fetchTokenDetails } from "@/lib/factoryApp";
+import { explorerTxUrl, findQuoteToken } from "@/lib/config";
 import { formatAge, formatMarketCap, formatQuoteAmount, formatTokenAmount, formatTokenPrice, shortAddress } from "@/lib/format";
 import { fetchToken } from "@/lib/indexer";
 import { getCurrentLaunchpad } from "@/lib/launchpad";
@@ -13,9 +13,10 @@ export const dynamic = "force-dynamic";
 export default async function TokenPage({ params }: PageProps<"/tokens/[address]">) {
   const launchpad = await getCurrentLaunchpad();
   const { address } = await params;
-  const [token, details] = await Promise.all([
+  const [token, details, quoteTokens] = await Promise.all([
     fetchToken(launchpad.address, address).catch(() => undefined),
     fetchTokenDetails(address),
+    fetchQuoteTokens(),
   ]);
 
   if (!token) {
@@ -27,6 +28,8 @@ export default async function TokenPage({ params }: PageProps<"/tokens/[address]
       </div>
     );
   }
+
+  const quoteToken = findQuoteToken(quoteTokens, token.quoteToken);
 
   return (
     <div className="flex flex-col gap-8">
@@ -67,12 +70,12 @@ export default async function TokenPage({ params }: PageProps<"/tokens/[address]
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section className="grid grid-cols-2 content-start gap-4">
-        <Stat label="Price" value={formatTokenPrice(token.price, token.quoteToken)} />
-        <Stat label="Market Cap" value={formatMarketCap(token)} />
-        <Stat label="Liquidity" value={formatQuoteAmount(token.liquidity, token.quoteToken)} />
-        <Stat label="Volume 24h" value={formatQuoteAmount(token.volume24h, token.quoteToken)} />
+        <Stat label="Price" value={formatTokenPrice(token.price, quoteToken)} />
+        <Stat label="Market Cap" value={formatMarketCap(token, quoteToken)} />
+        <Stat label="Liquidity" value={formatQuoteAmount(token.liquidity, quoteToken)} />
+        <Stat label="Volume 24h" value={formatQuoteAmount(token.volume24h, quoteToken)} />
         </section>
-        <BuyWidget token={token} launchpad={launchpad.address} />
+        <TradeWidget token={token} quoteToken={quoteToken} launchpad={launchpad.address} />
       </div>
 
       <section className="flex flex-col gap-4">
@@ -95,7 +98,7 @@ export default async function TokenPage({ params }: PageProps<"/tokens/[address]
                   <tr key={trade.id} className="border-t border-line">
                     <td className={`px-6 py-4 font-medium ${isBuy ? "text-success" : "text-danger"}`}>{isBuy ? "Buy" : "Sell"}</td>
                     <td className="px-6 py-4">{formatTokenAmount(isBuy ? trade.amountOut : trade.amountIn)}</td>
-                    <td className="px-6 py-4">{formatQuoteAmount(isBuy ? trade.amountIn : trade.amountOut, token.quoteToken)}</td>
+                    <td className="px-6 py-4">{formatQuoteAmount(isBuy ? trade.amountIn : trade.amountOut, quoteToken)}</td>
                     <td className="px-6 py-4">{formatAge(trade.timestamp)}</td>
                     <td className="px-6 py-4">
                       <a href={explorerTxUrl(trade.tx)} target="_blank" rel="noreferrer" className="text-brand hover:underline">

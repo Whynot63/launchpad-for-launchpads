@@ -32,7 +32,7 @@ export default async function LaunchpadStatsPage({ params }: PageProps<"/launchp
           <Link href={`/launchpads/${launchpad.address}/edit`} className={buttonClass("secondary")}>
             Edit
           </Link>
-          <a href={launchpadUrl(launchpad.slug)} className={buttonClass()}>
+          <a target="_blank" href={launchpadUrl(launchpad.slug)} className={buttonClass()}>
             Open Launchpad
           </a>
         </div>

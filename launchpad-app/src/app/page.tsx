@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, buttonClass } from "@/components/ui";
-import { fetchLaunchpadTokenDetails } from "@/lib/factoryApp";
+import { findQuoteToken } from "@/lib/config";
+import { fetchLaunchpadTokenDetails, fetchQuoteTokens } from "@/lib/factoryApp";
 import { formatAge, formatMarketCap, formatQuoteAmount, formatTokenPrice } from "@/lib/format";
 import { type IndexedToken, fetchLaunchpadTokens } from "@/lib/indexer";
 import { getCurrentLaunchpad } from "@/lib/launchpad";
@@ -10,9 +11,10 @@ export const dynamic = "force-dynamic";
 
 export default async function TokensPage() {
   const launchpad = await getCurrentLaunchpad();
-  const [tokens, detailsByToken] = await Promise.all([
+  const [tokens, detailsByToken, quoteTokens] = await Promise.all([
     fetchLaunchpadTokens(launchpad.address).catch((): IndexedToken[] | undefined => undefined),
     fetchLaunchpadTokenDetails(launchpad.address),
+    fetchQuoteTokens(),
   ]);
 
   return (
@@ -44,7 +46,9 @@ export default async function TokensPage() {
                 </tr>
               </thead>
               <tbody>
-                {tokens.map((token) => (
+                {tokens.map((token) => {
+                  const quoteToken = findQuoteToken(quoteTokens, token.quoteToken);
+                  return (
                   <tr key={token.id} className="border-t border-line transition hover:bg-raised/60">
                     <td className="px-6 py-4">
                       <Link href={`/tokens/${token.id}`} className="flex items-center gap-3 font-medium hover:text-brand">
@@ -59,13 +63,14 @@ export default async function TokensPage() {
                         </span>
                       </Link>
                     </td>
-                    <td className="px-6 py-4">{formatTokenPrice(token.price, token.quoteToken)}</td>
-                    <td className="px-6 py-4">{formatMarketCap(token)}</td>
-                    <td className="px-6 py-4">{formatQuoteAmount(token.volume24h, token.quoteToken)}</td>
+                    <td className="px-6 py-4">{formatTokenPrice(token.price, quoteToken)}</td>
+                    <td className="px-6 py-4">{formatMarketCap(token, quoteToken)}</td>
+                    <td className="px-6 py-4">{formatQuoteAmount(token.volume24h, quoteToken)}</td>
                     <td className="px-6 py-4">{token.numTrades24h}</td>
                     <td className="px-6 py-4">{formatAge(token.launchedAt)}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </Card>

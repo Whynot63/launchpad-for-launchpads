@@ -14,7 +14,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { launchpadAbi } from "@/lib/abis";
-import { chain, quoteTokens } from "@/lib/config";
+import { type QuoteToken, chain } from "@/lib/config";
 import { formatCompact, formatUsdPrecise } from "@/lib/format";
 import { type TokenLinks, type TokenMetadata, tokenMetadataError, tokenMetadataMessage } from "@/lib/tokenMetadata";
 import { ConnectButton } from "./ConnectButton";
@@ -63,7 +63,15 @@ function SummaryRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-export function LaunchTokenForm({ launchpad, accentColor }: { launchpad: Address; accentColor: string }) {
+export function LaunchTokenForm({
+  launchpad,
+  accentColor,
+  quoteTokens,
+}: {
+  launchpad: Address;
+  accentColor: string;
+  quoteTokens: QuoteToken[];
+}) {
   const router = useRouter();
   const { chainId, isConnected } = useAccount();
   const publicClient = usePublicClient();
