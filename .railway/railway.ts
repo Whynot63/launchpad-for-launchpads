@@ -2,6 +2,7 @@ import { bucket, defineRailway, github, postgres, preserve, project, ref, servic
 
 const REPO = "Whynot63/launchpad-for-launchpads";
 const LAUNCHPAD_DOMAIN = "launchp.bid";
+const INDEXER_URL = "https://indexer.dev.hyperindex.xyz/16a47cd/v1/graphql";
 
 export default defineRailway(() => {
   const db = postgres("postgres");
@@ -23,7 +24,7 @@ export default defineRailway(() => {
       RPC_URL: preserve(),
       NEXT_PUBLIC_CHAIN_ID: "84532",
       NEXT_PUBLIC_FACTORY_ADDRESS: "0xb02F9b23070E7a1Ad3160beC850c485fB7f48939",
-      NEXT_PUBLIC_INDEXER_URL: preserve(),
+      NEXT_PUBLIC_INDEXER_URL: INDEXER_URL,
       NEXT_PUBLIC_REOWN_PROJECT_ID: "f47bcbec5e1305efd898d8ca6df425c1",
       NEXT_PUBLIC_LAUNCHPAD_DOMAIN: LAUNCHPAD_DOMAIN,
     },
@@ -39,7 +40,7 @@ export default defineRailway(() => {
       NEXT_PUBLIC_CHAIN_ID: "84532",
       NEXT_PUBLIC_FACTORY_APP_URL: `https://${LAUNCHPAD_DOMAIN}`,
       NEXT_PUBLIC_REOWN_PROJECT_ID: "f47bcbec5e1305efd898d8ca6df425c1",
-      NEXT_PUBLIC_INDEXER_URL: preserve(),
+      NEXT_PUBLIC_INDEXER_URL: INDEXER_URL,
     },
   });
 

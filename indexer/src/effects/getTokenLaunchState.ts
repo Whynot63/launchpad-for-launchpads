@@ -4,7 +4,9 @@ import { createPublicClient, encodeAbiParameters, http, keccak256, parseAbi } fr
 const POOLS_SLOT = 6n;
 const SQRT_PRICE_X96_MASK = 2n ** 160n - 1n;
 
-const client = createPublicClient({ transport: http(process.env.ENVIO_RPC_URL, { batch: true }) });
+const RPC_URL = process.env.ENVIO_RPC_URL ?? "https://sepolia.base.org";
+
+const client = createPublicClient({ transport: http(RPC_URL, { batch: true }) });
 
 const abi = parseAbi([
   "function totalSupply() view returns (uint256)",
