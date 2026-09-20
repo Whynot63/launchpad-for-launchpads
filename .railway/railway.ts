@@ -29,7 +29,21 @@ export default defineRailway(() => {
     },
   });
 
+  const launchpadApp = service("launchpad-app", {
+    source: github(REPO, { branch: "master", rootDirectory: "launchpad-app" }),
+    build: { buildCommand: "pnpm build", watchPatterns: ["/launchpad-app/**"] },
+    start: "pnpm start",
+    healthcheck: "/healthz",
+    healthcheckTimeout: 120,
+    env: {
+      NEXT_PUBLIC_CHAIN_ID: "84532",
+      NEXT_PUBLIC_FACTORY_APP_URL: `https://${LAUNCHPAD_DOMAIN}`,
+      NEXT_PUBLIC_REOWN_PROJECT_ID: "f47bcbec5e1305efd898d8ca6df425c1",
+      NEXT_PUBLIC_INDEXER_URL: preserve(),
+    },
+  });
+
   return project("launchpad-for-launchpads", {
-    resources: [launchpadFactoryApp, db, staticBucket],
+    resources: [launchpadFactoryApp, launchpadApp, db, staticBucket],
   });
 });

@@ -49,9 +49,30 @@ services:
       minio:
         condition: service_healthy
 
+  launchpad-app:
+    image: node:24
+    working_dir: /app
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile --store-dir /pnpm-store && pnpm dev"
+    env_file:
+      - path: launchpad-app/.env.local
+        required: false
+    environment:
+      FACTORY_APP_INTERNAL_URL: http://launchpad-factory-app:3000
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./launchpad-app:/app
+      - launchpad-app-node-modules:/app/node_modules
+      - launchpad-app-next:/app/.next
+      - pnpm-store:/pnpm-store
+    depends_on:
+      - launchpad-factory-app
+
 volumes:
   postgres-data:
   minio-data:
   pnpm-store:
   launchpad-factory-app-node-modules:
   launchpad-factory-app-next:
+  launchpad-app-node-modules:
+  launchpad-app-next:
