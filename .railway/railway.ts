@@ -2,6 +2,7 @@ import { bucket, defineRailway, github, postgres, preserve, project, ref, servic
 
 const REPO = "Whynot63/launchpad-for-launchpads";
 const LAUNCHPAD_DOMAIN = "launchp.bid";
+const FACTORY_ADDRESS = "0xb02F9b23070E7a1Ad3160beC850c485fB7f48939";
 
 export default defineRailway((ctx) => {
   const db = postgres("postgres");
@@ -22,7 +23,7 @@ export default defineRailway((ctx) => {
       S3_SECRET_ACCESS_KEY: ref(staticBucket, "SECRET_ACCESS_KEY"),
       RPC_URL: preserve(),
       NEXT_PUBLIC_CHAIN_ID: "84532",
-      NEXT_PUBLIC_FACTORY_ADDRESS: "0xb02F9b23070E7a1Ad3160beC850c485fB7f48939",
+      NEXT_PUBLIC_FACTORY_ADDRESS: FACTORY_ADDRESS,
       INDEXER_URL: ctx.shared.INDEXER_URL,
       NEXT_PUBLIC_REOWN_PROJECT_ID: "f47bcbec5e1305efd898d8ca6df425c1",
       NEXT_PUBLIC_LAUNCHPAD_DOMAIN: LAUNCHPAD_DOMAIN,
@@ -43,7 +44,19 @@ export default defineRailway((ctx) => {
     },
   });
 
+  const priceUpdater = service("price-updater", {
+    source: github(REPO, { branch: "master", rootDirectory: "price-updater" }),
+    build: { watchPatterns: ["/price-updater/**"] },
+    start: "pnpm start",
+    deploy: { cronSchedule: "*/10 * * * *", restartPolicyType: "NEVER" },
+    env: {
+      RPC_URL: preserve(),
+      FACTORY_ADDRESS,
+      PRICE_UPDATER_PRIVATE_KEY: preserve(),
+    },
+  });
+
   return project("launchpad-for-launchpads", {
-    resources: [launchpadFactoryApp, launchpadApp, db, staticBucket],
+    resources: [launchpadFactoryApp, launchpadApp, priceUpdater, db, staticBucket],
   });
 });

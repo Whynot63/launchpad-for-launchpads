@@ -14,7 +14,7 @@ This leads to two design goals that pull in opposite directions:
 
 ### Technical architecture: monorepo
 
-For simplicity of development, everything lives in a monorepo: it is convenient to deploy, and an LLM gets access to the whole context at once. The repo has a folder for smart contracts, a folder for each of the two web apps, and a folder for the indexer.
+For simplicity of development, everything lives in a monorepo: it is convenient to deploy, and an LLM gets access to the whole context at once. The repo has a folder for smart contracts, a folder for each of the two web apps, a folder for the indexer, and a folder for the price updater.
 
 Components:
 
@@ -22,6 +22,7 @@ Components:
 - `launchpad-factory-app` — the frontend for creating and managing launchpads. Next.js + wagmi/viem; the backend lives here too (route handlers), no separate backend service
 - `launchpad-app` — the frontend of a launchpad itself; a separate service that works independently from `launchpad-factory-app`. Same stack: Next.js + wagmi/viem
 - `indexer` — [Envio](https://envio.dev/)
+- `price-updater` — a cron microservice: every 10 minutes it takes the ETH price from Binance, compares it with the price stored in the factory contract, and pushes a new price on-chain if it moved by more than ±5%
 
 ### Contracts
 
