@@ -15,8 +15,9 @@ const objectUrl = (key: string) => {
 };
 
 export const putObject = async (key: string, body: ArrayBuffer, contentType: string) => {
-  const response = await client.fetch(objectUrl(key), { method: "PUT", body, headers: { "content-type": contentType } });
-  if (!response.ok) throw new Error(`Storage upload failed with status ${response.status}`);
+  const signed = await client.sign(objectUrl(key), { method: "PUT", body, headers: { "content-type": contentType } });
+  const response = await fetch(signed.url, { method: "PUT", body, headers: signed.headers });
+  if (!response.ok) throw new Error(`Storage upload failed with status ${response.status}: ${await response.text()}`);
 };
 
 export const getObject = (key: string) => client.fetch(objectUrl(key));
