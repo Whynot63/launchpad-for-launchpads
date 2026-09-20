@@ -8,7 +8,7 @@ export const factoryAddress = (process.env.NEXT_PUBLIC_FACTORY_ADDRESS ?? zeroAd
 
 export const launchpadDomain = process.env.NEXT_PUBLIC_LAUNCHPAD_DOMAIN ?? "launch.localhost:3001";
 
-export type Hook = { address: Address; description: string };
+export type Hook = { address: Address; description: string; hasFeeSetup?: boolean };
 
 export type QuoteToken = { address: Address; symbol: string; decimals: number };
 

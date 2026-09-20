@@ -21,7 +21,7 @@ contract BaseSepoliaForkTest is Test {
     using PoolIdLibrary for PoolKey;
 
     uint256 constant TOTAL_SUPPLY = 1_000_000_000e18;
-    uint24 constant POOL_FEE = 10000;
+    uint24 constant POOL_FEE = 0;
     int24 constant TICK_SPACING = 200;
     Currency constant ETH = Currency.wrap(address(0));
     IHooks constant NO_HOOKS = IHooks(address(0));
@@ -48,11 +48,7 @@ contract BaseSepoliaForkTest is Test {
             factory.createLaunchpad(
                 abi.encodeCall(
                     ILaunchpad.initialize,
-                    (
-                        address(this),
-                        ILaunchpad.Config(TOTAL_SUPPLY, 5000e18, POOL_FEE, TICK_SPACING, hooks),
-                        quoteTokens
-                    )
+                    (address(this), ILaunchpad.Config(TOTAL_SUPPLY, 5000e18, TICK_SPACING, hooks), quoteTokens, "")
                 )
             )
         );

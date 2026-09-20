@@ -7,10 +7,17 @@ import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "w
 import { BrandingFields, EMPTY_BRANDING } from "@/components/BrandingFields";
 import { ConnectButton } from "@/components/ConnectButton";
 import { LaunchSettingsFields } from "@/components/LaunchSettingsFields";
-import { Button, Card, Notice } from "@/components/ui";
-import { launchpadAbi, launchpadFactoryAbi } from "@/lib/abis";
-import { chain, factoryAddress, quoteTokens } from "@/lib/config";
-import { DEFAULT_LAUNCH_SETTINGS, launchSettingsError, toLaunchConfig } from "@/lib/launchSettings";
+import { Button, Card, Field, Input, Notice } from "@/components/ui";
+import { feeHookAbi, launchpadAbi, launchpadFactoryAbi } from "@/lib/abis";
+import { chain, factoryAddress, hooks, quoteTokens } from "@/lib/config";
+import {
+  DEFAULT_HOOK_FEES,
+  DEFAULT_LAUNCH_SETTINGS,
+  hookFeesError,
+  launchSettingsError,
+  toHookFeesBps,
+  toLaunchConfig,
+} from "@/lib/launchSettings";
 import { metadataError } from "@/lib/metadata";
 import { errorMessage, useSaveBranding } from "@/lib/useSaveBranding";
 
@@ -28,10 +35,13 @@ export function CreateLaunchpadForm({ initialSlug }: { initialSlug: string }) {
 
   const [branding, setBranding] = useState({ ...EMPTY_BRANDING, slug: initialSlug });
   const [settings, setSettings] = useState(DEFAULT_LAUNCH_SETTINGS);
+  const [hookFees, setHookFees] = useState(DEFAULT_HOOK_FEES);
   const [enabledQuoteTokens, setEnabledQuoteTokens] = useState<Address[]>([quoteTokens[0].address]);
   const [created, setCreated] = useState<CreatedLaunchpad>();
   const [step, setStep] = useState<string>();
   const [error, setError] = useState<string>();
+
+  const hasFeeSetup = Boolean(hooks.find((hook) => hook.address === settings.hooks)?.hasFeeSetup);
 
   const deploy = async (): Promise<CreatedLaunchpad> => {
     if (chainId !== chain.id) await switchChainAsync({ chainId: chain.id });
@@ -44,7 +54,14 @@ export function CreateLaunchpadForm({ initialSlug }: { initialSlug: string }) {
         encodeFunctionData({
           abi: launchpadAbi,
           functionName: "initialize",
-          args: [account!, toLaunchConfig(settings), enabledQuoteTokens],
+          args: [
+            account!,
+            toLaunchConfig(settings),
+            enabledQuoteTokens,
+            hasFeeSetup
+              ? encodeFunctionData({ abi: feeHookAbi, functionName: "setupHookFee", args: toHookFeesBps(hookFees) })
+              : "0x",
+          ],
         }),
       ],
     });
@@ -59,6 +76,7 @@ export function CreateLaunchpadForm({ initialSlug }: { initialSlug: string }) {
     const invalid =
       metadataError({ ...branding, address: PLACEHOLDER_ADDRESS }) ??
       launchSettingsError(settings) ??
+      (hasFeeSetup ? hookFeesError(hookFees) : null) ??
       (enabledQuoteTokens.length === 0 ? "Enable at least one quote token" : null);
     if (invalid) return setError(invalid);
     setError(undefined);
@@ -94,10 +112,28 @@ export function CreateLaunchpadForm({ initialSlug }: { initialSlug: string }) {
 
       <details className="group rounded-2xl border border-line bg-surface/80 backdrop-blur">
         <summary className="cursor-pointer list-none px-6 py-4 text-sm font-medium">
-          Launch Settings <span className="text-muted group-open:hidden">— defaults: 1B supply, $5K market cap, 1% fee, ETH, default hook</span>
+          Launch Settings <span className="text-muted group-open:hidden">— defaults: 1B supply, $5K market cap, default hook</span>
         </summary>
         <fieldset disabled={Boolean(created)} className="flex flex-col gap-5 border-t border-line p-6 disabled:opacity-60">
           <LaunchSettingsFields value={settings} onChange={setSettings} />
+          {hasFeeSetup && (
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Field label="Launchpad Fee, %" hint="Your cut of every trade, paid in the paired asset. Fixed at creation.">
+                <Input
+                  inputMode="decimal"
+                  value={hookFees.launchpadFeePercent}
+                  onChange={(event) => setHookFees({ ...hookFees, launchpadFeePercent: event.target.value })}
+                />
+              </Field>
+              <Field label="Token Creator Fee, %" hint="Goes to whoever launches the token. Fixed at creation.">
+                <Input
+                  inputMode="decimal"
+                  value={hookFees.creatorFeePercent}
+                  onChange={(event) => setHookFees({ ...hookFees, creatorFeePercent: event.target.value })}
+                />
+              </Field>
+            </div>
+          )}
           <div className="flex flex-col gap-2 text-sm">
             <span className="font-medium">Quote Tokens</span>
             <div className="flex flex-wrap gap-3">

@@ -25,10 +25,7 @@ export function LaunchSettingsFields({
           onChange={(event) => set({ initialMarketcapUsd: event.target.value })}
         />
       </Field>
-      <Field label="Pool Fee, %" hint="Swap fee of the Uniswap v4 pool.">
-        <Input inputMode="decimal" value={value.poolFeePercent} onChange={(event) => set({ poolFeePercent: event.target.value })} />
-      </Field>
-      <Field label="Tick Spacing" hint="Price granularity of the pool. 200 fits a 1% fee.">
+      <Field label="Tick Spacing" hint="Price granularity of the pool.">
         <Input inputMode="numeric" value={value.tickSpacing} onChange={(event) => set({ tickSpacing: event.target.value })} />
       </Field>
       <div className="sm:col-span-2">

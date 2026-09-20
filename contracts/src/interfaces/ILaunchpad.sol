@@ -10,9 +10,13 @@ interface ILaunchpad {
     struct Config {
         uint256 totalSupply;
         uint256 initialMarketcap;
-        uint24 poolFee;
         int24 tickSpacing;
         IHooks hooks;
+    }
+
+    struct Launch {
+        address token;
+        address creator;
     }
 
     event TokenLaunched(
@@ -31,7 +35,12 @@ interface ILaunchpad {
     error HookNotAllowed();
     error QuoteNotEnabled();
 
-    function initialize(address owner_, Config calldata config_, Currency[] calldata quoteTokens) external;
+    function initialize(
+        address owner_,
+        Config calldata config_,
+        Currency[] calldata quoteTokens,
+        bytes calldata hookCall
+    ) external;
 
     function setConfig(Config calldata config_) external;
 
@@ -46,7 +55,9 @@ interface ILaunchpad {
     function config()
         external
         view
-        returns (uint256 totalSupply, uint256 initialMarketcap, uint24 poolFee, int24 tickSpacing, IHooks hooks);
+        returns (uint256 totalSupply, uint256 initialMarketcap, int24 tickSpacing, IHooks hooks);
+
+    function currentLaunch() external view returns (address token, address creator);
 
     function launchCount() external view returns (uint256);
 

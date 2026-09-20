@@ -38,7 +38,7 @@ contract LaunchpadTest is Test {
     uint256 constant INITIAL_MARKETCAP = 3000e18;
     uint256 constant QUOTE_PRICE = 3000e18;
     int24 constant STARTING_TICK = 207200;
-    uint24 constant POOL_FEE = 10000;
+    uint24 constant POOL_FEE = 0;
     int24 constant TICK_SPACING = 200;
 
     Currency constant ETH = Currency.wrap(address(0));
@@ -72,8 +72,9 @@ contract LaunchpadTest is Test {
                     ILaunchpad.initialize,
                     (
                         address(this),
-                        ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS),
-                        onlyEth()
+                        ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, TICK_SPACING, HOOKS),
+                        onlyEth(),
+                        ""
                     )
                 )
             )
@@ -245,7 +246,7 @@ contract LaunchpadTest is Test {
 
     function testFuzz_launchToken_succeedsForAnyInitialMarketcapInBothSortOrders(uint256 initialMarketcap) public {
         initialMarketcap = bound(initialMarketcap, 100e18, 1_000_000_000e18);
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, initialMarketcap, POOL_FEE, TICK_SPACING, HOOKS));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, initialMarketcap, TICK_SPACING, HOOKS));
         launchpad.setQuoteEnabled(QUOTE_BELOW_B20, true);
         launchpad.setQuoteEnabled(QUOTE_ABOVE_B20, true);
 
@@ -266,7 +267,7 @@ contract LaunchpadTest is Test {
     }
 
     function test_setConfig_nextLaunchesUseNewConfig() public {
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY / 2, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY / 2, INITIAL_MARKETCAP, TICK_SPACING, HOOKS));
 
         IB20 token = IB20(launchpad.launchToken("Test Token", "TEST", ETH));
 
@@ -276,7 +277,7 @@ contract LaunchpadTest is Test {
     function test_setConfig_revertsWhenCallerIsNotOwner() public {
         vm.prank(stranger);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, stranger));
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, TICK_SPACING, HOOKS));
     }
 
     function test_setQuoteEnabled_revertsWhenFactoryHasNoQuotePrice() public {
@@ -316,12 +317,12 @@ contract LaunchpadTest is Test {
 
     function test_setConfig_revertsWhenHooksNotAllowedByFactory() public {
         vm.expectRevert(ILaunchpad.HookNotAllowed.selector);
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, OTHER_HOOKS));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, TICK_SPACING, OTHER_HOOKS));
     }
 
     function test_setConfig_revertsWithoutHooksUnlessFactoryAllowsIt() public {
         ILaunchpad.Config memory hookless =
-            ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, IHooks(address(0)));
+            ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, TICK_SPACING, IHooks(address(0)));
 
         vm.expectRevert(ILaunchpad.HookNotAllowed.selector);
         launchpad.setConfig(hookless);
@@ -340,7 +341,7 @@ contract LaunchpadTest is Test {
         vm.prank(factoryOwner);
         factory.setHookAllowed(OTHER_HOOKS, true);
 
-        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, OTHER_HOOKS));
+        launchpad.setConfig(ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, TICK_SPACING, OTHER_HOOKS));
         address token = launchpad.launchToken("Test Token", "TEST", ETH);
 
         (uint160 sqrtPriceX96,,,) = poolManager.getSlot0(poolKeyOf(token, ETH, OTHER_HOOKS).toId());
@@ -349,14 +350,14 @@ contract LaunchpadTest is Test {
 
     function test_initialize_revertsWhenCalledTwice() public {
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        launchpad.initialize(address(1), ILaunchpad.Config(1, 1, 0, 1, HOOKS), onlyEth());
+        launchpad.initialize(address(1), ILaunchpad.Config(1, 1, 1, HOOKS), onlyEth(), "");
     }
 
     function test_initialize_revertsOnImplementation() public {
         Launchpad implementation = new Launchpad(poolManager);
 
         vm.expectRevert(Initializable.InvalidInitialization.selector);
-        implementation.initialize(address(1), ILaunchpad.Config(1, 1, 0, 1, HOOKS), onlyEth());
+        implementation.initialize(address(1), ILaunchpad.Config(1, 1, 1, HOOKS), onlyEth(), "");
     }
 
     function test_upgrade_factoryOwnerSwitchesImplementationAndKeepsState() public {

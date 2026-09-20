@@ -34,7 +34,7 @@ Components:
 2. Anyone can launch a launchpad. A launchpad is created as a proxy, and its implementation is controlled by the factory owner.
 3. Only the factory owner can change the implementation of a launchpad.
 4. A launchpad allows launching a token against a whitelisted quote token and with a whitelisted hook.
-5. The launch parameters (total supply, initial market cap in USD, pool fee, tick spacing, enabled quote tokens, and the hook — picked from the factory whitelist) are chosen by the launchpad owner; users always launch with the hook the owner picked. The starting price is derived from the market cap using the factory's quote price.
+5. The launch parameters (total supply, initial market cap in USD, tick spacing, enabled quote tokens, and the hook — picked from the factory whitelist) are chosen by the launchpad owner; users always launch with the hook the owner picked. The starting price is derived from the market cap using the factory's quote price.
 6. Hooks are whitelisted at the factory level: because of possible hook scams, users must not be able to write their own hooks without approval.
 
 ### Indexer

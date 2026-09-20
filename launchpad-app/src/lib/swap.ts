@@ -61,12 +61,14 @@ export const erc20Abi = parseAbi([
   "function balanceOf(address account) view returns (uint256)",
 ]);
 
-export const poolKeyFor = (token: Address, quoteToken: Address, fee: number, tickSpacing: number, hooks: Address): PoolKey => {
+const POOL_FEE = 0;
+
+export const poolKeyFor = (token: Address, quoteToken: Address, tickSpacing: number, hooks: Address): PoolKey => {
   const quoteIsCurrency0 = BigInt(quoteToken) < BigInt(token);
   return {
     currency0: quoteIsCurrency0 ? quoteToken : token,
     currency1: quoteIsCurrency0 ? token : quoteToken,
-    fee,
+    fee: POOL_FEE,
     tickSpacing,
     hooks,
   };

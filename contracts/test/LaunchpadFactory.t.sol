@@ -16,7 +16,7 @@ import {LaunchpadFactory} from "../src/LaunchpadFactory.sol";
 contract LaunchpadFactoryTest is Test {
     uint256 constant TOTAL_SUPPLY = 1_000_000_000e18;
     uint256 constant INITIAL_MARKETCAP = 3000e18;
-    uint24 constant POOL_FEE = 10000;
+    uint24 constant POOL_FEE = 0;
     int24 constant TICK_SPACING = 200;
     Currency constant ETH = Currency.wrap(address(0));
     Currency constant STABLECOIN = Currency.wrap(address(0x1111));
@@ -55,11 +55,7 @@ contract LaunchpadFactoryTest is Test {
             factory.createLaunchpad(
                 abi.encodeCall(
                     ILaunchpad.initialize,
-                    (
-                        creator,
-                        ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS),
-                        quoteTokens
-                    )
+                    (creator, ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, TICK_SPACING, HOOKS), quoteTokens, "")
                 )
             )
         );
@@ -69,11 +65,9 @@ contract LaunchpadFactoryTest is Test {
         Launchpad launchpad = createLaunchpadAs(alice);
 
         assertEq(launchpad.owner(), alice);
-        (uint256 totalSupply, uint256 initialMarketcap, uint24 poolFee, int24 tickSpacing, IHooks hooks) =
-            launchpad.config();
+        (uint256 totalSupply, uint256 initialMarketcap, int24 tickSpacing, IHooks hooks) = launchpad.config();
         assertEq(totalSupply, TOTAL_SUPPLY);
         assertEq(initialMarketcap, INITIAL_MARKETCAP);
-        assertEq(poolFee, POOL_FEE);
         assertEq(tickSpacing, TICK_SPACING);
         assertEq(address(hooks), address(HOOKS));
         assertTrue(launchpad.isQuoteEnabled(ETH));
@@ -89,9 +83,19 @@ contract LaunchpadFactoryTest is Test {
         factory.createLaunchpad(
             abi.encodeCall(
                 ILaunchpad.initialize,
-                (alice, ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, POOL_FEE, TICK_SPACING, HOOKS), quoteTokens)
+                (alice, ILaunchpad.Config(TOTAL_SUPPLY, INITIAL_MARKETCAP, TICK_SPACING, HOOKS), quoteTokens, "")
             )
         );
+    }
+
+    function test_createLaunchpad_registersLaunchpad() public {
+        assertTrue(factory.isLaunchpad(address(createLaunchpadAs(alice))));
+        assertFalse(factory.isLaunchpad(alice));
+    }
+
+    function test_createLaunchpad_revertsWhenCalldataDoesNotInitializeLaunchpad() public {
+        vm.expectRevert(LaunchpadFactory.LaunchpadNotInitialized.selector);
+        factory.createLaunchpad(abi.encodeCall(ILaunchpad.launchCount, ()));
     }
 
     function test_createLaunchpad_emitsLaunchpadCreated() public {

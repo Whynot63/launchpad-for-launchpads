@@ -3,6 +3,7 @@ pragma solidity ^0.8.26;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
@@ -26,23 +27,31 @@ import {ILaunchpadFactory} from "./interfaces/ILaunchpadFactory.sol";
 
 contract Launchpad is ILaunchpad, SafeCallback, Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint8 public constant TOKEN_DECIMALS = 18;
+    uint24 public constant POOL_FEE = 0;
 
     ILaunchpadFactory public factory;
     Config public config;
     uint256 public launchCount;
+    Launch public currentLaunch;
     mapping(Currency => bool) public isQuoteEnabled;
 
     constructor(IPoolManager poolManager_) SafeCallback(poolManager_) {
         _disableInitializers();
     }
 
-    function initialize(address owner_, Config calldata config_, Currency[] calldata quoteTokens) external initializer {
+    function initialize(
+        address owner_,
+        Config calldata config_,
+        Currency[] calldata quoteTokens,
+        bytes calldata hookCall
+    ) external initializer {
         __Ownable_init(owner_);
         factory = ILaunchpadFactory(msg.sender);
         _setConfig(config_);
         for (uint256 i = 0; i < quoteTokens.length; i++) {
             _setQuoteEnabled(quoteTokens[i], true);
         }
+        if (hookCall.length > 0) Address.functionCall(address(config_.hooks), hookCall);
     }
 
     function setConfig(Config calldata config_) external onlyOwner {
@@ -76,13 +85,15 @@ contract Launchpad is ILaunchpad, SafeCallback, Initializable, UUPSUpgradeable, 
         PoolKey memory poolKey = PoolKey({
             currency0: tokenIsCurrency1 ? quoteToken : Currency.wrap(token),
             currency1: tokenIsCurrency1 ? Currency.wrap(token) : quoteToken,
-            fee: config.poolFee,
+            fee: POOL_FEE,
             tickSpacing: config.tickSpacing,
             hooks: hooks
         });
         int24 poolStartingTick = tokenIsCurrency1 ? _startingTick(quoteToken) : -_startingTick(quoteToken);
 
+        currentLaunch = Launch(token, msg.sender);
         poolManager.initialize(poolKey, TickMath.getSqrtPriceAtTick(poolStartingTick));
+        delete currentLaunch;
         poolManager.unlock(abi.encode(poolKey, tokenIsCurrency1, poolStartingTick));
 
         emit TokenLaunched(token, msg.sender, PoolIdLibrary.toId(poolKey), quoteToken, hooks, name, symbol);

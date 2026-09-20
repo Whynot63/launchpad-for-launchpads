@@ -1,7 +1,12 @@
 {
   "hooks": [
     {
-      "address": "0x6149A4335f29189E197e19320e2eC8Fbb60EA000",
+      "address": "0xAdd49fE69D02Aa294eAA84bA302B2d16aBA960cc",
+      "description": "Fee hook — takes trading fees in the paired asset and splits them between the platform, the launchpad, and the token creator",
+      "hasFeeSetup": true
+    },
+    {
+      "address": "0xaf223ad59BbC4FAFCCAE468692417bD6C9546000",
       "description": "No-op hook — a test hook that does nothing"
     }
   ],

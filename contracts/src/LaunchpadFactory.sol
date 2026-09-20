@@ -3,26 +3,35 @@ pragma solidity ^0.8.26;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
 import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
 import {FullMath} from "@uniswap/v4-core/src/libraries/FullMath.sol";
+import {ILaunchpad} from "./interfaces/ILaunchpad.sol";
 import {ILaunchpadFactory} from "./interfaces/ILaunchpadFactory.sol";
 import {IOwnable} from "./interfaces/IOwnable.sol";
 
 contract LaunchpadFactory is ILaunchpadFactory, Ownable {
+    uint16 public constant MAX_PROTOCOL_FEE_BPS = 500;
+
     address public launchpadImplementation;
+    uint16 public protocolFeeBps;
+    mapping(address => bool) public isLaunchpad;
     mapping(IHooks => bool) public isHookAllowed;
     mapping(address => bool) public isPriceUpdater;
     mapping(Currency => uint256) internal usdPricePerWad;
 
     event LaunchpadCreated(address indexed launchpad, address indexed creator);
     event LaunchpadImplementationSet(address indexed launchpadImplementation);
+    event ProtocolFeeSet(uint16 protocolFeeBps);
     event HookAllowedSet(IHooks indexed hooks, bool allowed);
     event PriceUpdaterSet(address indexed priceUpdater, bool allowed);
     event QuotePriceSet(Currency indexed quoteToken, uint256 usdPricePerWad);
 
     error QuotePriceNotSet();
     error NotPriceUpdater();
+    error ProtocolFeeTooHigh();
+    error LaunchpadNotInitialized();
 
     constructor(address owner_, address launchpadImplementation_) Ownable(owner_) {
         _setLaunchpadImplementation(launchpadImplementation_);
@@ -30,6 +39,12 @@ contract LaunchpadFactory is ILaunchpadFactory, Ownable {
 
     function setLaunchpadImplementation(address launchpadImplementation_) external onlyOwner {
         _setLaunchpadImplementation(launchpadImplementation_);
+    }
+
+    function setProtocolFee(uint16 protocolFeeBps_) external onlyOwner {
+        if (protocolFeeBps_ > MAX_PROTOCOL_FEE_BPS) revert ProtocolFeeTooHigh();
+        protocolFeeBps = protocolFeeBps_;
+        emit ProtocolFeeSet(protocolFeeBps_);
     }
 
     function setHookAllowed(IHooks hooks, bool allowed) external onlyOwner {
@@ -49,7 +64,10 @@ contract LaunchpadFactory is ILaunchpadFactory, Ownable {
     }
 
     function createLaunchpad(bytes calldata initializeCalldata) external returns (address launchpad) {
-        launchpad = address(new ERC1967Proxy(launchpadImplementation, initializeCalldata));
+        launchpad = address(new ERC1967Proxy(launchpadImplementation, ""));
+        isLaunchpad[launchpad] = true;
+        Address.functionCall(launchpad, initializeCalldata);
+        if (address(ILaunchpad(launchpad).factory()) != address(this)) revert LaunchpadNotInitialized();
         emit LaunchpadCreated(launchpad, msg.sender);
     }
 

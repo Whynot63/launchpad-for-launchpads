@@ -63,7 +63,7 @@ export function TradeWidget({
 
   const config = useReadContract({ address: launchpad, abi: launchpadAbi, functionName: "config" });
   const poolKey =
-    config.data && poolKeyFor(token.id as Address, token.quoteToken as Address, config.data[2], config.data[3], token.hooks as Address);
+    config.data && poolKeyFor(token.id as Address, token.quoteToken as Address, config.data[2], token.hooks as Address);
   const isPoolKnown = Boolean(poolKey && poolIdOf(poolKey) === token.poolId);
   const amountIn = currencyIn ? parseAmount(amount, currencyIn.decimals) : 0n;
 

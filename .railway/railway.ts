@@ -2,7 +2,7 @@ import { bucket, defineRailway, github, postgres, preserve, project, ref, servic
 
 const REPO = "Whynot63/launchpad-for-launchpads";
 const LAUNCHPAD_DOMAIN = "launchp.bid";
-const FACTORY_ADDRESS = "0xb02F9b23070E7a1Ad3160beC850c485fB7f48939";
+const FACTORY_ADDRESS = "0x70207718Aa760f04719973314E662BD3719cff1B";
 
 export default defineRailway((ctx) => {
   const db = postgres("postgres");
