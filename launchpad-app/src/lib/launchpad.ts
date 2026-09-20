@@ -16,9 +16,13 @@ export type Launchpad = {
 
 export const launchpadSlugFromHost = (host: string) => host.split(":")[0].split(".")[0];
 
+export const currentLaunchpadSlug = cache(async () => {
+  const requestHeaders = await headers();
+  return launchpadSlugFromHost(requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "");
+});
+
 export const findCurrentLaunchpad = cache(async () => {
-  const host = (await headers()).get("x-forwarded-host") ?? (await headers()).get("host") ?? "";
-  const response = await fetch(`${FACTORY_APP_INTERNAL_URL}/api/launchpads/${launchpadSlugFromHost(host)}`, {
+  const response = await fetch(`${FACTORY_APP_INTERNAL_URL}/api/launchpads/${await currentLaunchpadSlug()}`, {
     next: { revalidate: 30 },
   });
   return response.ok ? ((await response.json()) as Launchpad) : undefined;

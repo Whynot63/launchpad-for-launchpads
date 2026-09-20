@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import type { CSSProperties } from "react";
 import { Header } from "@/components/Header";
-import { findCurrentLaunchpad } from "@/lib/launchpad";
+import { ClaimLaunchpad } from "@/components/ClaimLaunchpad";
+import { currentLaunchpadSlug, findCurrentLaunchpad } from "@/lib/launchpad";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -10,7 +11,7 @@ const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight
 
 export async function generateMetadata(): Promise<Metadata> {
   const launchpad = await findCurrentLaunchpad();
-  if (!launchpad) return { title: "Launchpad Not Found" };
+  if (!launchpad) return { title: `${await currentLaunchpadSlug()} Is Available` };
   return {
     title: launchpad.name,
     description: launchpad.description || `Launch and trade tokens on ${launchpad.name}.`,
@@ -28,7 +29,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       >
         <Providers>
           {launchpad && <Header launchpad={launchpad} />}
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">{children}</main>
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6">
+            {launchpad ? children : <ClaimLaunchpad slug={await currentLaunchpadSlug()} />}
+          </main>
         </Providers>
       </body>
     </html>
