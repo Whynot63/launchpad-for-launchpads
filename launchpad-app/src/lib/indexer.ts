@@ -5,6 +5,8 @@ const INDEXER_URL = process.env.INDEXER_URL ?? "http://localhost:8080/v1/graphql
 export type IndexedToken = {
   id: string;
   creator: string;
+  poolId: string;
+  hooks: string;
   name: string;
   symbol: string;
   quoteToken: string;
@@ -27,7 +29,7 @@ export type IndexedTrade = {
 };
 
 const TOKEN_FIELDS =
-  "id creator name symbol quoteToken launchedAt totalSupply price liquidity volume volume24h numTrades24h";
+  "id creator poolId hooks name symbol quoteToken launchedAt totalSupply price liquidity volume volume24h numTrades24h";
 
 const query = async <Data>(document: string, variables: Record<string, unknown>) => {
   const response = await fetch(INDEXER_URL, {

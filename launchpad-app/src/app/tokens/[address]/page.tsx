@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BuyWidget } from "@/components/BuyWidget";
 import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, Notice, Stat } from "@/components/ui";
 import { fetchTokenDetails } from "@/lib/factoryApp";
@@ -64,12 +65,15 @@ export default async function TokenPage({ params }: PageProps<"/tokens/[address]
         )}
       </section>
 
-      <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <section className="grid grid-cols-2 content-start gap-4">
         <Stat label="Price" value={formatTokenPrice(token.price, token.quoteToken)} />
         <Stat label="Market Cap" value={formatMarketCap(token)} />
         <Stat label="Liquidity" value={formatQuoteAmount(token.liquidity, token.quoteToken)} />
         <Stat label="Volume 24h" value={formatQuoteAmount(token.volume24h, token.quoteToken)} />
-      </section>
+        </section>
+        <BuyWidget token={token} launchpad={launchpad.address} />
+      </div>
 
       <section className="flex flex-col gap-4">
         <h2 className="heading text-xl">Trades</h2>
