@@ -13,7 +13,18 @@ export type IndexedToken = {
   numTrades24h: number;
 };
 
-export type IndexedLaunchpad = { id: string; creator: string; createdAt: number; tokens: IndexedToken[] };
+export type IndexedLaunchpad = {
+  id: string;
+  creator: string;
+  createdAt: number;
+  numTokens: number;
+  numTrades: number;
+  numTrades24h: number;
+  volumeUsd: string;
+  volumeUsd24h: string;
+};
+
+const LAUNCHPAD_FIELDS = "id creator createdAt numTokens numTrades numTrades24h volumeUsd volumeUsd24h";
 
 const TOKEN_FIELDS = "id name symbol quoteToken launchedAt price liquidity volume volume24h numTrades24h";
 
@@ -30,15 +41,14 @@ const query = async <Data>(document: string, variables: Record<string, unknown> 
 };
 
 export const fetchIndexedLaunchpads = async () =>
-  (await query<{ Launchpad: IndexedLaunchpad[] }>(`{ Launchpad { id creator createdAt tokens { ${TOKEN_FIELDS} } } }`))
-    .Launchpad;
+  (await query<{ Launchpad: IndexedLaunchpad[] }>(`{ Launchpad { ${LAUNCHPAD_FIELDS} } }`)).Launchpad;
 
 export const fetchIndexedLaunchpad = async (address: string) =>
   (
-    await query<{ Launchpad: IndexedLaunchpad[] }>(
+    await query<{ Launchpad: (IndexedLaunchpad & { tokens: IndexedToken[] })[] }>(
       `query ($address: String!) {
         Launchpad(where: { id: { _ilike: $address } }) {
-          id creator createdAt tokens(order_by: { launchedAt: desc }) { ${TOKEN_FIELDS} }
+          ${LAUNCHPAD_FIELDS} tokens(order_by: { launchedAt: desc }) { ${TOKEN_FIELDS} }
         }
       }`,
       { address },

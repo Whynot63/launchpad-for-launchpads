@@ -4,9 +4,8 @@ import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, Stat, buttonClass } from "@/components/ui";
 import { launchpadDomain, launchpadUrl } from "@/lib/config";
 import { findLaunchpad } from "@/lib/db";
-import { formatCompact, formatQuoteAmount, formatTokenPrice, shortAddress } from "@/lib/format";
+import { formatCompact, formatQuoteAmount, formatTokenPrice, formatUsd, shortAddress } from "@/lib/format";
 import { fetchIndexedLaunchpad } from "@/lib/indexer";
-import { summarizeTokens } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +15,6 @@ export default async function LaunchpadStatsPage({ params }: PageProps<"/launchp
 
   const indexed = await fetchIndexedLaunchpad(launchpad.address).catch(() => undefined);
   const tokens = indexed?.tokens ?? [];
-  const summary = summarizeTokens(tokens);
 
   return (
     <div className="flex flex-col gap-8">
@@ -43,10 +41,10 @@ export default async function LaunchpadStatsPage({ params }: PageProps<"/launchp
       {launchpad.description && <p className="max-w-2xl text-muted">{launchpad.description}</p>}
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="Tokens Launched" value={summary.tokenCount} />
-        <Stat label="Volume 24h" value={summary.volume24h} />
-        <Stat label="Trades 24h" value={formatCompact(summary.trades24h)} />
-        <Stat label="Total Volume" value={summary.volume} />
+        <Stat label="Tokens Launched" value={indexed?.numTokens ?? 0} />
+        <Stat label="Volume 24h" value={formatUsd(indexed?.volumeUsd24h)} />
+        <Stat label="Trades 24h" value={formatCompact(indexed?.numTrades24h ?? 0)} />
+        <Stat label="Total Volume" value={formatUsd(indexed?.volumeUsd)} />
       </section>
 
       <Card className="overflow-x-auto p-0">

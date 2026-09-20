@@ -11,6 +11,15 @@ indexer.onEvent(
       id: event.params.launchpad,
       creator: event.params.creator,
       createdAt: event.block.timestamp,
+      numTokens: 0,
+      numTrades: 0,
+      numTrades24h: 0,
+      volumeUsd: 0n,
+      volumeUsd24h: 0n,
     });
   },
 );
+
+indexer.onEvent({ contract: "LaunchpadFactory", event: "QuotePriceSet" }, async ({ event, context }) => {
+  context.QuotePrice.set({ id: event.params.quoteToken, usdPricePerWad: event.params.usdPricePerWad });
+});

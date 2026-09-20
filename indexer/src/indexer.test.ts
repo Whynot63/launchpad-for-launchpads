@@ -55,6 +55,13 @@ const launchpadCreated = {
   params: { launchpad: LAUNCHPAD, creator: LAUNCHPAD_CREATOR },
 };
 
+const ethPriceSet = {
+  contract: "LaunchpadFactory" as const,
+  event: "QuotePriceSet" as const,
+  block: { number: START_BLOCK + 1, timestamp: 1000 },
+  params: { quoteToken: ETH, usdPricePerWad: 3000n * 10n ** 18n },
+};
+
 const tokenLaunched = {
   contract: "Launchpad" as const,
   event: "TokenLaunched" as const,
@@ -95,6 +102,11 @@ describe("creation events", () => {
       id: LAUNCHPAD,
       creator: LAUNCHPAD_CREATOR,
       createdAt: 1000,
+      numTokens: 1,
+      numTrades: 0,
+      numTrades24h: 0,
+      volumeUsd: 0n,
+      volumeUsd24h: 0n,
       chainId: CHAIN_ID,
     });
     const token = await indexer.Token.getOrThrow(TOKEN);
@@ -128,6 +140,7 @@ describe("trades", () => {
         [CHAIN_ID]: {
           simulate: [
             launchpadCreated,
+            ethPriceSet,
             tokenLaunched,
             swap(START_BLOCK + 3, LAUNCHED_AT + 60, "0xaa", { amount0: -(10n ** 18n), amount1: 9n * 10n ** 23n, sqrtPriceX96: 500n * Q96 }),
             swap(START_BLOCK + 4, LAUNCHED_AT + HOUR, "0xbb", { amount0: 4n * 10n ** 17n, amount1: -(5n * 10n ** 23n), sqrtPriceX96: 800n * Q96 }),
@@ -161,6 +174,14 @@ describe("trades", () => {
     t.expect(token.volume).toBe(14n * 10n ** 17n);
     t.expect(token.volume24h).toBe(14n * 10n ** 17n);
     t.expect(token.numTrades24h).toBe(2);
+    const { id, chainId, creator, createdAt, ...launchpadStats } = await indexer.Launchpad.getOrThrow(LAUNCHPAD);
+    t.expect(launchpadStats).toEqual({
+      numTokens: 1,
+      numTrades: 2,
+      numTrades24h: 2,
+      volumeUsd: 4200n * 10n ** 18n,
+      volumeUsd24h: 4200n * 10n ** 18n,
+    });
   });
 
   it("drops trades older than 24 hours from the 24h stats", async (t) => {
@@ -171,6 +192,7 @@ describe("trades", () => {
         [CHAIN_ID]: {
           simulate: [
             launchpadCreated,
+            ethPriceSet,
             tokenLaunched,
             swap(START_BLOCK + 3, LAUNCHED_AT + 60, "0xaa", { amount0: -(10n ** 18n), amount1: 9n * 10n ** 23n, sqrtPriceX96: 500n * Q96 }),
             swap(START_BLOCK + 4, LAUNCHED_AT + 25 * HOUR, "0xbb", { amount0: -(2n * 10n ** 18n), amount1: 10n ** 23n, sqrtPriceX96: 400n * Q96 }),
@@ -183,6 +205,11 @@ describe("trades", () => {
     t.expect(token.volume).toBe(3n * 10n ** 18n);
     t.expect(token.volume24h).toBe(2n * 10n ** 18n);
     t.expect(token.numTrades24h).toBe(1);
+    const launchpad = await indexer.Launchpad.getOrThrow(LAUNCHPAD);
+    t.expect(launchpad.numTrades).toBe(2);
+    t.expect(launchpad.numTrades24h).toBe(1);
+    t.expect(launchpad.volumeUsd).toBe(9000n * 10n ** 18n);
+    t.expect(launchpad.volumeUsd24h).toBe(6000n * 10n ** 18n);
   });
 
   it("ignores swaps in pools that were not created by a launchpad", async (t) => {
@@ -193,6 +220,7 @@ describe("trades", () => {
         [CHAIN_ID]: {
           simulate: [
             launchpadCreated,
+            ethPriceSet,
             tokenLaunched,
             swap(START_BLOCK + 3, LAUNCHED_AT + 60, "0xaa", { id: OTHER_POOL_ID, amount0: -1n, amount1: 1n, sqrtPriceX96: Q96 }),
           ],

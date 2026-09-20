@@ -29,5 +29,8 @@ indexer.onEvent(
       numTrades24h: 0,
     });
     context.Pool.set({ id: poolId, token_id: token });
+
+    const launchpad = await context.Launchpad.getOrThrow(event.srcAddress);
+    context.Launchpad.set({ ...launchpad, numTokens: launchpad.numTokens + 1 });
   },
 );

@@ -2,7 +2,25 @@ type Launchpad {
   id: ID!
   creator: String! @index
   createdAt: Int!
+  numTokens: Int!
+  numTrades: Int!
+  numTrades24h: Int!
+  volumeUsd: BigInt!
+  volumeUsd24h: BigInt!
   tokens: [Token!]! @derivedFrom(field: "launchpad")
+}
+
+type LaunchpadHourData {
+  id: ID!
+  launchpad: Launchpad!
+  hour: Int!
+  volumeUsd: BigInt!
+  numTrades: Int!
+}
+
+type QuotePrice {
+  id: ID!
+  usdPricePerWad: BigInt!
 }
 
 type Token {

@@ -17,4 +17,7 @@ export const formatTokenPrice = (quoteUnitsPerWholeToken: string, quoteTokenAddr
   return `${price.toPrecision(4)} ${quoteToken?.symbol ?? "?"}`;
 };
 
+export const formatUsd = (usdWad: string | bigint | undefined) =>
+  `$${compact.format(Number(formatUnits(BigInt(usdWad ?? 0), 18)))}`;
+
 export const shortAddress = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;

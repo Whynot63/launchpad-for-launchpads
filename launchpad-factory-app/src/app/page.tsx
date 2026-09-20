@@ -2,9 +2,9 @@ import Link from "next/link";
 import { LaunchpadLogo } from "@/components/LaunchpadLogo";
 import { Card, buttonClass } from "@/components/ui";
 import { launchpadDomain } from "@/lib/config";
+import { formatUsd } from "@/lib/format";
 import { listLaunchpads } from "@/lib/db";
 import { type IndexedLaunchpad, fetchIndexedLaunchpads } from "@/lib/indexer";
-import { summarizeTokens } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export default async function LaunchpadsPage() {
     listLaunchpads(),
     fetchIndexedLaunchpads().catch((): IndexedLaunchpad[] => []),
   ]);
-  const tokensByLaunchpad = new Map(indexed.map((launchpad) => [launchpad.id.toLowerCase(), launchpad.tokens]));
+  const statsByLaunchpad = new Map(indexed.map((launchpad) => [launchpad.id.toLowerCase(), launchpad]));
 
   return (
     <div className="flex flex-col gap-10">
@@ -35,7 +35,7 @@ export default async function LaunchpadsPage() {
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2">
             {launchpads.map((launchpad) => {
-              const summary = summarizeTokens(tokensByLaunchpad.get(launchpad.address) ?? []);
+              const stats = statsByLaunchpad.get(launchpad.address);
               return (
                 <li key={launchpad.address}>
                   <Link
@@ -54,15 +54,15 @@ export default async function LaunchpadsPage() {
                     <dl className="grid grid-cols-3 gap-2 text-sm">
                       <div>
                         <dt className="text-xs text-muted">Tokens</dt>
-                        <dd>{summary.tokenCount}</dd>
+                        <dd>{stats?.numTokens ?? 0}</dd>
                       </div>
                       <div>
                         <dt className="text-xs text-muted">Volume 24h</dt>
-                        <dd>{summary.volume24h}</dd>
+                        <dd>{formatUsd(stats?.volumeUsd24h)}</dd>
                       </div>
                       <div>
                         <dt className="text-xs text-muted">Trades 24h</dt>
-                        <dd>{summary.trades24h}</dd>
+                        <dd>{stats?.numTrades24h ?? 0}</dd>
                       </div>
                     </dl>
                   </Link>

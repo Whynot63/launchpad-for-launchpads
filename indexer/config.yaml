@@ -5,6 +5,7 @@ contracts:
 - name: LaunchpadFactory
   events:
   - event: LaunchpadCreated(address indexed launchpad, address indexed creator)
+  - event: QuotePriceSet(address indexed quoteToken, uint256 usdPricePerWad)
 - name: Launchpad
   events:
   - event: TokenLaunched(address indexed token, address indexed creator, bytes32 indexed poolId, address quoteToken, address hooks, string name, string symbol)
