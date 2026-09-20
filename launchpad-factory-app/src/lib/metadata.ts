@@ -1,3 +1,5 @@
+import { LOGO_PATH_PATTERN } from "./uploads";
+
 export type LaunchpadMetadata = {
   address: string;
   slug: string;
@@ -28,7 +30,7 @@ export const metadataError = (metadata: LaunchpadMetadata) => {
   if (RESERVED_SLUGS.includes(metadata.slug)) return "This subdomain is reserved";
   if (metadata.name.trim().length < 2 || metadata.name.length > 50) return "Name must be 2–50 characters";
   if (metadata.description.length > 280) return "Description must be at most 280 characters";
-  if (metadata.logoUrl && !/^https:\/\/\S{1,500}$/.test(metadata.logoUrl)) return "Logo must be an https URL";
+  if (metadata.logoUrl && !LOGO_PATH_PATTERN.test(metadata.logoUrl)) return "Logo must be an uploaded image";
   if (!COLOR_PATTERN.test(metadata.accentColor)) return "Accent color must be a hex color";
   return null;
 };

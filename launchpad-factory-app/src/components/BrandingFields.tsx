@@ -2,6 +2,7 @@
 
 import { launchpadDomain } from "@/lib/config";
 import { type LaunchpadMetadata, slugFromName } from "@/lib/metadata";
+import { LogoUpload } from "./LogoUpload";
 import { Field, Input, Textarea } from "./ui";
 
 export type BrandingForm = Omit<LaunchpadMetadata, "address">;
@@ -50,14 +51,7 @@ export function BrandingFields({
           />
         </Field>
       </div>
-      <Field label="Logo URL" hint="Optional. An https link to a square image.">
-        <Input
-          type="url"
-          placeholder="https://…"
-          value={value.logoUrl}
-          onChange={(event) => set({ logoUrl: event.target.value })}
-        />
-      </Field>
+      <LogoUpload value={value.logoUrl} onChange={(logoUrl) => set({ logoUrl })} />
       <Field label="Accent Color">
         <Input
           type="color"

@@ -13,6 +13,19 @@ services:
       interval: 2s
       retries: 15
 
+  minio:
+    image: minio/minio
+    entrypoint: sh -c "mkdir -p /data/launchpad-static && minio server /data --console-address :9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      retries: 15
+
   launchpad-factory-app:
     image: node:24
     working_dir: /app
@@ -22,6 +35,7 @@ services:
         required: false
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/launchpads
+      S3_ENDPOINT: http://minio:9000
     ports:
       - "3000:3000"
     volumes:
@@ -32,9 +46,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_healthy
 
 volumes:
   postgres-data:
+  minio-data:
   pnpm-store:
   launchpad-factory-app-node-modules:
   launchpad-factory-app-next:
