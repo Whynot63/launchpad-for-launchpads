@@ -10,6 +10,11 @@
       "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
       "symbol": "USDC",
       "decimals": 6
+    },
+    {
+      "address": "0x0000000000000000000000000000000000000000",
+      "symbol": "ETH",
+      "decimals": 18
     }
   ]
 }
